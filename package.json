@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@hashgraph/hedera-wallet-connect": "^1.5.1",
-    "@hashgraph/sdk": "^2.68.0",
     "hashconnect": "^3.0.13",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
@@ -29,8 +28,7 @@
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4"
   },
-  "resolutions": {
-  "@hashgraph/sdk": "^2.33.0"
-}
-
+  "overrides": {
+    "@hashgraph/sdk": "2.68.0"
+  }
 }

@@ -1,4 +1,4 @@
-import { LedgerId } from "@hashgraph/sdk";
+import { AccountId, LedgerId, TransferTransaction } from "@hashgraph/sdk";
 import {
   HashConnect,
   HashConnectConnectionState,
@@ -46,7 +46,7 @@ export const WalletService = {
 
     hashconnect.disconnectionEvent.on(() => {
       console.log("Disconnected");
-      state = HashConnectConnectionState.Disconnected
+      state = HashConnectConnectionState.Disconnected;
       pairingData = null;
     });
 
@@ -57,7 +57,7 @@ export const WalletService = {
   },
 
   async disconnect() {
-    await hashconnect.disconnect()
+    await hashconnect.disconnect();
   },
 
   getAccountId(): string | null {
@@ -66,5 +66,21 @@ export const WalletService = {
 
   isConnected(): boolean {
     return state === HashConnectConnectionState.Paired && pairingData !== null;
+  },
+
+  sendTransaction() {
+    let accountIdStr = this.getAccountId()
+    if (accountIdStr !== null) {
+      const accountId = AccountId.fromString(accountIdStr)
+      const transaction = new TransferTransaction()
+      .addHbarTransfer(accountId, -1)
+      .addHbarTransfer("0.0.5166796", 1)
+
+      hashconnect.sendTransaction(accountId, transaction).then(response => {
+        console.log(response)
+      }).catch(err => {
+        console.log(err)
+      })
+    }
   },
 };

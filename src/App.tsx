@@ -22,6 +22,10 @@ function App() {
     }
   }
 
+  const transfer = async() => {
+    WalletService.sendTransaction()
+  }
+
   return (
     <div>
       <h1>test</h1>
@@ -29,6 +33,7 @@ function App() {
         <p>
           Wallet Connected: <strong>{accountId}</strong>
           <button onClick={disconnect}>Disconnect</button>
+          <button onClick={transfer}>Transfer</button>
         </p>
       ) : (
         <button onClick={connectWallet}>Connect Wallet</button>
