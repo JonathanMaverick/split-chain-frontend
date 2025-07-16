@@ -29,6 +29,7 @@ function App() {
 
   const transfer = async () => {
     WalletService.sendTransaction();
+    WalletService.checkBalance().then((res) => setBalance(res));
   };
 
   return (
@@ -39,7 +40,6 @@ function App() {
           Wallet Connected: <strong>{accountId}</strong>
           <button onClick={disconnect}>Disconnect</button>
           <button onClick={transfer}>Transfer</button>
-          <br />
           {balance && <>Balance: {balance.hbars}</>}
         </p>
       ) : (

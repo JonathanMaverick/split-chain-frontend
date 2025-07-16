@@ -74,36 +74,36 @@ export const WalletService = {
     return state === HashConnectConnectionState.Paired && pairingData !== null;
   },
 
-  sendTransaction() {
+  async sendTransaction() {
     let accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
       const accountId = AccountId.fromString(accountIdStr);
-      const transaction = new TransferTransaction()
-        .addHbarTransfer(accountId, -1)
-        .addHbarTransfer("0.0.5166796", 1);
+      const signer = hashconnect.getSigner(accountId);
 
-      hashconnect
-        .sendTransaction(accountId, transaction)
-        .then((response) => {
-          console.log(response);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      //TODO: Using backend to create a transaction (Optional)
+      let transaction = await new TransferTransaction()
+        .addHbarTransfer(accountId, -1)
+        .addHbarTransfer("0.0.5166796", 1)
+        .freezeWithSigner(signer);
+
+      let response = await transaction.executeWithSigner(signer);
+      let receipt = await response.getReceiptWithSigner(signer)
+
+      console.log(receipt);
     }
   },
 
   async checkBalance() {
     let accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
-      const accountId = AccountId.fromString(accountIdStr)
+      const accountId = AccountId.fromString(accountIdStr);
 
-      const balanceQuery = new AccountBalanceQuery().setAccountId(accountId)
-      const client = Client.forTestnet()
+      const balanceQuery = new AccountBalanceQuery().setAccountId(accountId);
+      const client = Client.forTestnet();
 
-      const balance = await balanceQuery.execute(client)
+      const balance = await balanceQuery.execute(client);
 
-      client.close()
+      client.close();
       return {
         hbars: balance.hbars.toString(),
       };
@@ -111,5 +111,4 @@ export const WalletService = {
       throw new Error("Account Id not found!");
     }
   },
-
 };
