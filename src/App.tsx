@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { WalletService } from "./services/walletService";
+import { UserService } from "./services/userService";
 
 function App() {
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -10,11 +11,21 @@ function App() {
   const connectWallet = async () => {
     await WalletService.init();
 
-    const checkConnected = setInterval(() => {
+    const checkConnected = setInterval(async () => {
       console.log("Checking connection...", WalletService.isConnected());
       if (WalletService.isConnected()) {
-        setAccountId(WalletService.getAccountId());
+        const id = WalletService.getAccountId();
+        setAccountId(id);
         WalletService.checkBalance().then((res) => setBalance(res));
+
+        try {
+          const res = await UserService.registerUser({
+            wallet: id!,
+          });
+          console.log("Registered: ", res.message);
+        } catch (err) {
+          console.log("Register Failed: ", err);
+        }
         clearInterval(checkConnected);
       }
     }, 500);

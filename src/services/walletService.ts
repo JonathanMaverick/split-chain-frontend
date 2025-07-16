@@ -75,26 +75,28 @@ export const WalletService = {
   },
 
   async sendTransaction() {
-    let accountIdStr = this.getAccountId();
+    const accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
       const accountId = AccountId.fromString(accountIdStr);
       const signer = hashconnect.getSigner(accountId);
 
       //TODO: Using backend to create a transaction (Optional)
-      let transaction = await new TransferTransaction()
+      const transaction = await new TransferTransaction()
         .addHbarTransfer(accountId, -1)
-        .addHbarTransfer("0.0.5166796", 1)
+        .addHbarTransfer("0.0.6331448", 1)
         .freezeWithSigner(signer);
 
-      let response = await transaction.executeWithSigner(signer);
-      let receipt = await response.getReceiptWithSigner(signer)
+      const response = await transaction.executeWithSigner(signer);
+      const receipt = await response.getReceiptWithSigner(signer);
 
-      console.log(receipt);
+      console.log("receipt: ", receipt);
+      console.log("response: ", response);
+      console.log("Transaction ID:", response.transactionId.toString());
     }
   },
 
   async checkBalance() {
-    let accountIdStr = this.getAccountId();
+    const accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
       const accountId = AccountId.fromString(accountIdStr);
 
