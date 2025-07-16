@@ -1,4 +1,10 @@
-import { AccountId, LedgerId, TransferTransaction } from "@hashgraph/sdk";
+import {
+  AccountBalanceQuery,
+  AccountId,
+  Client,
+  LedgerId,
+  TransferTransaction,
+} from "@hashgraph/sdk";
 import {
   HashConnect,
   HashConnectConnectionState,
@@ -69,18 +75,41 @@ export const WalletService = {
   },
 
   sendTransaction() {
-    let accountIdStr = this.getAccountId()
+    let accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
-      const accountId = AccountId.fromString(accountIdStr)
+      const accountId = AccountId.fromString(accountIdStr);
       const transaction = new TransferTransaction()
-      .addHbarTransfer(accountId, -1)
-      .addHbarTransfer("0.0.5166796", 1)
+        .addHbarTransfer(accountId, -1)
+        .addHbarTransfer("0.0.5166796", 1);
 
-      hashconnect.sendTransaction(accountId, transaction).then(response => {
-        console.log(response)
-      }).catch(err => {
-        console.log(err)
-      })
+      hashconnect
+        .sendTransaction(accountId, transaction)
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   },
+
+  async checkBalance() {
+    let accountIdStr = this.getAccountId();
+    if (accountIdStr !== null) {
+      const accountId = AccountId.fromString(accountIdStr)
+
+      const balanceQuery = new AccountBalanceQuery().setAccountId(accountId)
+      const client = Client.forTestnet()
+
+      const balance = await balanceQuery.execute(client)
+
+      client.close()
+      return {
+        hbars: balance.hbars.toString(),
+      };
+    } else {
+      throw new Error("Account Id not found!");
+    }
+  },
+
 };
