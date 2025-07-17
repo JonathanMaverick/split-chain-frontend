@@ -1,3 +1,3 @@
 export interface User {
-  wallet: string;
+  wallet_address: string;
 }

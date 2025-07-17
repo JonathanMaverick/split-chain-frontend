@@ -20,7 +20,7 @@ function App() {
 
         try {
           const res = await UserService.registerUser({
-            wallet: id!,
+            wallet_address: id!,
           });
           console.log("Registered: ", res.message);
         } catch (err) {

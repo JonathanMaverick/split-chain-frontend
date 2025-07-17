@@ -7,10 +7,10 @@ export const UserService = {
       const response = await axios.post(
         "http://localhost:8080/api/v1/register",
         {
-          wallet: user.wallet,
+          wallet_address: user.wallet_address,
         }
       );
-
+      console.log(response)
       return response.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
