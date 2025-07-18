@@ -5,9 +5,7 @@ function ParticipantBody() {
   useEffect(() => {
     const getParticipant = async () => {
       await axios
-        .get(
-          "http://localhost:8080/api/v1/participants/get-all-participant-detail/User456"
-        )
+        .get("http://localhost:8080/api/v1/participants/User456")
         .then((res) => {
           console.log("Participant: ", res);
         })
