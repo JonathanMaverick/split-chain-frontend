@@ -57,7 +57,7 @@ const ParticlesBackground = () => {
       <Particles
         id="tsparticles"
         options={options}
-        className="fixed inset-0 -z-10 pointer-events-none bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800"
+        className="fixed inset-0 -z-10 pointer-events-none bg-transparent"
       />
     );
   }

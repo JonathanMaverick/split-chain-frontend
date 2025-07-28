@@ -12,7 +12,7 @@ export default function Template({ children }: TemplateProps) {
 
   if (isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br bg-transparent text-white">
+      <div className="min-h-screen bg-transparent text-white">
         <Navbar />
         <main className="px-6 py-8">
           <div className="max-w-7xl mx-auto">{children}</div>
