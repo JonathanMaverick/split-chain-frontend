@@ -48,6 +48,7 @@ export const WalletService = {
     hashconnect.pairingEvent.on((newPairing) => {
       console.log("Paired:", newPairing);
       pairingData = newPairing;
+      localStorage.setItem("wallet_account_id", newPairing.accountIds[0]);
     });
 
     hashconnect.disconnectionEvent.on(() => {

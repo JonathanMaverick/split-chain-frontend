@@ -1,15 +1,14 @@
 import axios from "axios";
-import type { User } from "../models/user";
 
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}${
   import.meta.env.VITE_API_VERSION
 }`;
 
-export const UserService = {
-  async registerUser(user: User) {
+export const BillService = {
+  async createBill(bill: Receipt) {
     try {
       const response = await axios.post(`${BASE_URL}/register`, {
-        wallet_address: user.wallet_address,
+        bill,
       });
       return response.data;
     } catch (err: unknown) {

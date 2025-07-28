@@ -1,17 +1,20 @@
 import axios from "axios";
-import type { User } from "../models/user";
 
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}${
   import.meta.env.VITE_API_VERSION
 }`;
 
-export const UserService = {
-  async registerUser(user: User) {
+export const ReceiptService = {
+  async postReceipt(file: File): Promise<Receipt> {
     try {
-      const response = await axios.post(`${BASE_URL}/register`, {
-        wallet_address: user.wallet_address,
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await axios.post(`${BASE_URL}/receipt`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      return response.data;
+      return response.data.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         const errorMessage =
