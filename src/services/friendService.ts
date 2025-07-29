@@ -9,7 +9,7 @@ const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}${
 export const FriendService = {
   async addFriend(currUser: User, friend: User) {
     try {
-      const response = await axios.post(`${BASE_URL}/add`, {
+      const response = await axios.post(`${BASE_URL}/friends/add`, {
         friend_wallet_address: friend.wallet_address,
         user_wallet_address: currUser.wallet_address,
       });

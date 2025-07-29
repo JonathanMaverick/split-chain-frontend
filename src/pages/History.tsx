@@ -7,21 +7,21 @@ const History = () => {
       restaurant: "Pizza Palace",
       amount: "45.50",
       people: 3,
-      status: "completed",
+      status: "Completed",
     },
     {
       date: "2025-07-21",
       restaurant: "Coffee Shop",
       amount: "18.75",
       people: 2,
-      status: "pending",
+      status: "Pending",
     },
     {
       date: "2025-07-20",
       restaurant: "Thai Restaurant",
       amount: "67.20",
       people: 4,
-      status: "completed",
+      status: "Completed",
     },
   ];
 
@@ -66,7 +66,7 @@ const History = () => {
                     </div>
                     <div
                       className={`text-sm px-2 py-1 rounded-full inline-block ${
-                        transaction.status === "completed"
+                        transaction.status === "Completed"
                           ? "bg-green-500/20 text-green-300"
                           : "bg-yellow-500/20 text-yellow-300"
                       }`}

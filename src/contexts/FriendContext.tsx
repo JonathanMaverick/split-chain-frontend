@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { FriendService } from "../services/friendService";
 import type { User } from "../models/user";
 
