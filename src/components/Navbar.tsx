@@ -164,7 +164,7 @@ export default function Navbar() {
           <button
             onClick={handleLogout}
             disabled={isAuthLoading}
-            className={`flex items-center space-x-2 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-red-200 rounded-lg transition-all duration-300 border border-red-500/30 cursor-pointer hover:border-red-400/50 hover:shadow-lg hover:shadow-red-500/20 ${
+            className={`flex items-center space-x-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-purple-200 rounded-lg transition-all duration-300 border border-purple-500/30 cursor-pointer hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/20 ${
               isAuthLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

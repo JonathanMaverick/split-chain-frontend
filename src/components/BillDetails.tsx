@@ -225,11 +225,13 @@ const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
             ))}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-white/10">
+          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4 mt-6"></div>
+
+          <div>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-white">
                 <span className="font-semibold text-xl">Subtotal</span>
-                <span className="font-bold text-xl">
+                <span className="font-semibold text-xl">
                   ${subtotal.toFixed(2)}
                 </span>
               </div>
