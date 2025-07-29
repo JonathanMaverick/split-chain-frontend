@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { UserPlus, X, Check, Search, FileText } from "lucide-react";
+import type { Friend } from "../models/friend";
 
 interface BillProps {
   receipt: Receipt;
@@ -23,10 +24,10 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   }, [receiptItems]);
 
   useEffect(() => {
-    const initializedItems = receipt.items.map(item => ({
+    const initializedItems = receipt.items.map((item) => ({
       ...item,
       friends: [],
-      portions: {}
+      portions: {},
     }));
     setReceiptItems(initializedItems);
   }, [receipt.items]);
@@ -49,79 +50,79 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
         const mockFriends: Friend[] = [
           {
-            id: "1",
-            nickname: "John Doe",
-            friend_wallet_address: "0x1234...5678",
+            ID: "1",
+            Nickname: "John Doe",
+            FriendWalletAddress: "0x1234...5678",
           },
           {
-            id: "2",
-            nickname: "Jane Smith",
-            friend_wallet_address: "0x8765...4321",
+            ID: "2",
+            Nickname: "Jane Smith",
+            FriendWalletAddress: "0x8765...4321",
           },
           {
-            id: "3",
-            nickname: "Bob Johnson",
-            friend_wallet_address: "0xabcd...efgh",
+            ID: "3",
+            Nickname: "Bob Johnson",
+            FriendWalletAddress: "0xabcd...efgh",
           },
           {
-            id: "4",
-            nickname: "Alice Brown",
-            friend_wallet_address: "0x9876...1234",
+            ID: "4",
+            Nickname: "Alice Brown",
+            FriendWalletAddress: "0x9876...1234",
           },
           {
-            id: "5",
-            nickname: "Michael Chen",
-            friend_wallet_address: "0x2468...1357",
+            ID: "5",
+            Nickname: "Michael Chen",
+            FriendWalletAddress: "0x2468...1357",
           },
           {
-            id: "6",
-            nickname: "Sarah Wilson",
-            friend_wallet_address: "0x1357...2468",
+            ID: "6",
+            Nickname: "Sarah Wilson",
+            FriendWalletAddress: "0x1357...2468",
           },
           {
-            id: "7",
-            nickname: "David Kim",
-            friend_wallet_address: "0x5678...9012",
+            ID: "7",
+            Nickname: "David Kim",
+            FriendWalletAddress: "0x5678...9012",
           },
           {
-            id: "8",
-            nickname: "Emma Davis",
-            friend_wallet_address: "0x9012...3456",
+            ID: "8",
+            Nickname: "Emma Davis",
+            FriendWalletAddress: "0x9012...3456",
           },
           {
-            id: "9",
-            nickname: "James Taylor",
-            friend_wallet_address: "0x3456...7890",
+            ID: "9",
+            Nickname: "James Taylor",
+            FriendWalletAddress: "0x3456...7890",
           },
           {
-            id: "10",
-            nickname: "Lisa Garcia",
-            friend_wallet_address: "0x7890...2345",
+            ID: "10",
+            Nickname: "Lisa Garcia",
+            FriendWalletAddress: "0x7890...2345",
           },
           {
-            id: "11",
-            nickname: "Ryan Martinez",
-            friend_wallet_address: "0x2345...6789",
+            ID: "11",
+            Nickname: "Ryan Martinez",
+            FriendWalletAddress: "0x2345...6789",
           },
           {
-            id: "12",
-            nickname: "Ashley Lee",
-            friend_wallet_address: "0x6789...0123",
+            ID: "12",
+            Nickname: "Ashley Lee",
+            FriendWalletAddress: "0x6789...0123",
           },
           {
-            id: "13",
-            nickname: "Kevin Wong",
-            friend_wallet_address: "0x0123...4567",
+            ID: "13",
+            Nickname: "Kevin Wong",
+            FriendWalletAddress: "0x0123...4567",
           },
           {
-            id: "14",
-            nickname: "Amanda Clark",
-            friend_wallet_address: "0x4567...8901",
+            ID: "14",
+            Nickname: "Amanda Clark",
+            FriendWalletAddress: "0x4567...8901",
           },
           {
-            id: "15",
-            nickname: "Chris Anderson",
-            friend_wallet_address: "0x8901...2345",
+            ID: "15",
+            Nickname: "Chris Anderson",
+            FriendWalletAddress: "0x8901...2345",
           },
         ];
 
@@ -143,7 +144,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
       if (!item.friends) item.friends = [];
 
-      if (!item.friends.some(f => f.id === friend.id)) {
+      if (!item.friends.some((f) => f.ID === friend.ID)) {
         item.friends.push(friend);
       }
 
@@ -151,23 +152,23 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
     });
   };
 
-  const removeFriendFromItem = (itemIndex: number, friendId: string) => {
+  const removeFriendFromItem = (itemIndex: number, friendID: string) => {
     setReceiptItems((prev) => {
       const newItems = [...prev];
       const item = newItems[itemIndex];
 
       if (!item.friends) item.friends = [];
 
-      item.friends = item.friends.filter(friend => friend.id !== friendId);
+      item.friends = item.friends.filter((friend) => friend.ID !== friendID);
 
       return newItems;
     });
   };
 
-  const calculateFriendTotal = (friendId: string) => {
+  const calculateFriendTotal = (friendID: string) => {
     return receiptItems.reduce((total, item) => {
       if (!item.friends) return total;
-      const friendInItem = item.friends.find(f => f.id === friendId);
+      const friendInItem = item.friends.find((f) => f.ID === friendID);
       if (friendInItem) {
         const itemPrice = item.totalPrice;
         const portionPerFriend = itemPrice / item.friends.length;
@@ -186,10 +187,10 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
   const filteredFriends = friends.filter(
     (friend) =>
-      friend.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.friend_wallet_address
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      friend.Nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      friend.FriendWalletAddress.toLowerCase().includes(
+        searchQuery.toLowerCase()
+      )
   );
 
   const closeModal = () => {
@@ -274,31 +275,36 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                   {assignedFriends.length > 0 ? (
                     <div className="space-y-2">
                       {assignedFriends.map((assignedFriend) => {
-                        const portion = assignedFriend ? (itemWithFriends.totalPrice / assignedFriends.length) : 0;
+                        const portion = assignedFriend
+                          ? itemWithFriends.totalPrice / assignedFriends.length
+                          : 0;
 
                         return (
-                                                      <div
-                              key={assignedFriend.id}
-                              className="flex items-center justify-between bg-white/10 rounded-lg p-3 animate-in slide-in-from-left duration-200"
-                            >
-                              <div>
-                                <span className="text-white font-medium">
-                                  {assignedFriend.nickname}
-                                </span>
-                                <span className="text-purple-200 text-sm ml-2">
-                                  ${portion.toFixed(2)} (
-                                  {(portion * HBAR_RATE).toFixed(2)} ℏ)
-                                </span>
-                              </div>
-                              <button
-                                onClick={() =>
-                                  removeFriendFromItem(itemIndex, assignedFriend.id)
-                                }
-                                className="p-1 text-white hover:bg-white/20 rounded cursor-pointer"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
+                          <div
+                            key={assignedFriend.ID}
+                            className="flex items-center justify-between bg-white/10 rounded-lg p-3 animate-in slide-in-from-left duration-200"
+                          >
+                            <div>
+                              <span className="text-white font-medium">
+                                {assignedFriend.Nickname}
+                              </span>
+                              <span className="text-purple-200 text-sm ml-2">
+                                ${portion.toFixed(2)} (
+                                {(portion * HBAR_RATE).toFixed(2)} ℏ)
+                              </span>
                             </div>
+                            <button
+                              onClick={() =>
+                                removeFriendFromItem(
+                                  itemIndex,
+                                  assignedFriend.ID
+                                )
+                              }
+                              className="p-1 text-white hover:bg-white/20 rounded cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -319,16 +325,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
             <div className="space-y-2 mb-4">
               {friends.map((friend) => {
-                const total = calculateFriendTotal(friend.id);
+                const total = calculateFriendTotal(friend.ID);
                 if (total === 0) return null;
 
                 return (
                   <div
-                    key={friend.id}
+                    key={friend.ID}
                     className="flex justify-between items-center text-lg"
                   >
                     <span className="text-purple-200 font-semibold">
-                      {friend.nickname}
+                      {friend.Nickname}
                     </span>
                     <span className="text-purple-200 font-semibold">
                       ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)} ℏ)
@@ -375,16 +381,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
           </div>
 
           <div className="flex gap-3">
-                          <button
-                onClick={() => {
-                  const updatedReceipt = {
-                    ...receipt,
-                    items: receiptItems
-                  };
-                  onSave?.(updatedReceipt);
-                }}
-                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
-              >
+            <button
+              onClick={() => {
+                const updatedReceipt = {
+                  ...receipt,
+                  items: receiptItems,
+                };
+                onSave?.(updatedReceipt);
+              }}
+              className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+            >
               Continue to Payment
             </button>
           </div>
@@ -480,16 +486,18 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                   <div className="grid grid-cols-3 gap-4">
                     {filteredFriends.length > 0 ? (
                       filteredFriends.map((friend, index) => {
-                        const isAssigned = selectedItem !== null && receiptItems[
-                          selectedItem
-                        ]?.friends?.some(f => f.id === friend.id);
+                        const isAssigned =
+                          selectedItem !== null &&
+                          receiptItems[selectedItem]?.friends?.some(
+                            (f) => f.ID === friend.ID
+                          );
 
                         return (
                           <button
-                            key={friend.id}
+                            key={friend.ID}
                             onClick={() => {
                               if (isAssigned) {
-                                removeFriendFromItem(selectedItem, friend.id);
+                                removeFriendFromItem(selectedItem, friend.ID);
                               } else {
                                 assignFriendToItem(selectedItem, friend);
                               }
@@ -506,16 +514,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                           >
                             <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-fuchsia-400 rounded-full flex items-center justify-center mb-3 shadow-lg">
                               <span className="text-white font-bold text-lg">
-                                {friend.nickname.charAt(0).toUpperCase()}
+                                {friend.Nickname.charAt(0).toUpperCase()}
                               </span>
                             </div>
 
                             <div className="text-center flex-1">
                               <div className="font-semibold text-sm mb-1 truncate w-full">
-                                {friend.nickname}
+                                {friend.Nickname}
                               </div>
                               <div className="text-xs opacity-75 font-mono truncate w-full">
-                                {friend.friend_wallet_address}
+                                {friend.FriendWalletAddress}
                               </div>
                             </div>
 
