@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@hashgraph/hedera-wallet-connect": "^1.5.1",
+    "@mantine/core": "^8.2.1",
+    "@mantine/hooks": "^8.2.1",
     "@tailwindcss/vite": "^4.1.11",
     "@tsparticles/engine": "^3.8.1",
     "@tsparticles/react": "^3.0.0",

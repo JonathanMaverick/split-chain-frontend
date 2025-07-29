@@ -4,13 +4,16 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import { WalletProvider } from "./contexts/WalletContext.tsx";
+import { FriendProvider } from "./contexts/FriendContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <WalletProvider>
-        <App />
-      </WalletProvider>
+        <WalletProvider>
+          <FriendProvider>
+            <App />
+          </FriendProvider>
+        </WalletProvider>
     </BrowserRouter>
   </StrictMode>
 );
