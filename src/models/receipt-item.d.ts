@@ -5,4 +5,5 @@ interface ReceiptItem {
   totalPrice: number;
   priceAfterTax: number;
   priceInHBAR: number;
+  friends?: Friend[];
 }

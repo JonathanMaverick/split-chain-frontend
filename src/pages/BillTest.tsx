@@ -1,5 +1,4 @@
 import { useState } from "react";
-import BillDetails from "../components/BillDetails";
 import Bill from "../components/Bill";
 
 const BillTest = () => {

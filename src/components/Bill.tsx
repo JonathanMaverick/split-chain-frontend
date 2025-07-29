@@ -1,48 +1,46 @@
 import React, { useState, useEffect } from "react";
-import {
-  Users,
-  UserPlus,
-  X,
-  Check,
-  FileText,
-  ArrowLeft,
-  Search,
-} from "lucide-react";
-
-interface Friend {
-  friend_wallet_address: string;
-  id: string;
-  nickname: string;
-}
-
-interface ItemAssignment {
-  itemIndex: number;
-  assignedFriends: string[]; // friend IDs
-  portions: { [friendId: string]: number }; // how much each friend owes
-}
+import { UserPlus, X, Check, Search, FileText } from "lucide-react";
 
 interface BillProps {
   receipt: Receipt;
   onBack?: () => void;
-  onSave?: (assignments: ItemAssignment[]) => void;
+  onSave?: (receipt: Receipt) => void;
 }
 
-const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
+const HBAR_RATE = 3.5;
+
+const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [assignments, setAssignments] = useState<ItemAssignment[]>([]);
+  const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
   const [showFriendSelector, setShowFriendSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    const initialAssignments = receipt.items.map((_, index) => ({
-      itemIndex: index,
-      assignedFriends: [],
-      portions: {},
+    console.log(receiptItems);
+  }, [receiptItems]);
+
+  useEffect(() => {
+    const initializedItems = receipt.items.map(item => ({
+      ...item,
+      friends: [],
+      portions: {}
     }));
-    setAssignments(initialAssignments);
+    setReceiptItems(initializedItems);
   }, [receipt.items]);
+
+  useEffect(() => {
+    if (showFriendSelector) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showFriendSelector]);
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -70,6 +68,61 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
             nickname: "Alice Brown",
             friend_wallet_address: "0x9876...1234",
           },
+          {
+            id: "5",
+            nickname: "Michael Chen",
+            friend_wallet_address: "0x2468...1357",
+          },
+          {
+            id: "6",
+            nickname: "Sarah Wilson",
+            friend_wallet_address: "0x1357...2468",
+          },
+          {
+            id: "7",
+            nickname: "David Kim",
+            friend_wallet_address: "0x5678...9012",
+          },
+          {
+            id: "8",
+            nickname: "Emma Davis",
+            friend_wallet_address: "0x9012...3456",
+          },
+          {
+            id: "9",
+            nickname: "James Taylor",
+            friend_wallet_address: "0x3456...7890",
+          },
+          {
+            id: "10",
+            nickname: "Lisa Garcia",
+            friend_wallet_address: "0x7890...2345",
+          },
+          {
+            id: "11",
+            nickname: "Ryan Martinez",
+            friend_wallet_address: "0x2345...6789",
+          },
+          {
+            id: "12",
+            nickname: "Ashley Lee",
+            friend_wallet_address: "0x6789...0123",
+          },
+          {
+            id: "13",
+            nickname: "Kevin Wong",
+            friend_wallet_address: "0x0123...4567",
+          },
+          {
+            id: "14",
+            nickname: "Amanda Clark",
+            friend_wallet_address: "0x4567...8901",
+          },
+          {
+            id: "15",
+            nickname: "Chris Anderson",
+            friend_wallet_address: "0x8901...2345",
+          },
         ];
 
         setFriends(mockFriends);
@@ -83,68 +136,44 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
     fetchFriends();
   }, []);
 
-  const assignFriendToItem = (itemIndex: number, friendId: string) => {
-    setAssignments((prev) => {
-      const newAssignments = [...prev];
-      const assignment = newAssignments[itemIndex];
+  const assignFriendToItem = (itemIndex: number, friend: Friend) => {
+    setReceiptItems((prev) => {
+      const newItems = [...prev];
+      const item = newItems[itemIndex];
 
-      if (!assignment.assignedFriends.includes(friendId)) {
-        assignment.assignedFriends.push(friendId);
-        const totalFriends = assignment.assignedFriends.length;
-        const itemPrice = receipt.items[itemIndex].totalPrice;
-        const portionPerFriend = itemPrice / totalFriends;
+      if (!item.friends) item.friends = [];
 
-        assignment.portions = {};
-        assignment.assignedFriends.forEach((id) => {
-          assignment.portions[id] = portionPerFriend;
-        });
+      if (!item.friends.some(f => f.id === friend.id)) {
+        item.friends.push(friend);
       }
 
-      return newAssignments;
+      return newItems;
     });
   };
 
   const removeFriendFromItem = (itemIndex: number, friendId: string) => {
-    setAssignments((prev) => {
-      const newAssignments = [...prev];
-      const assignment = newAssignments[itemIndex];
+    setReceiptItems((prev) => {
+      const newItems = [...prev];
+      const item = newItems[itemIndex];
 
-      assignment.assignedFriends = assignment.assignedFriends.filter(
-        (id) => id !== friendId
-      );
-      delete assignment.portions[friendId];
+      if (!item.friends) item.friends = [];
 
-      if (assignment.assignedFriends.length > 0) {
-        const itemPrice = receipt.items[itemIndex].totalPrice;
-        const portionPerFriend = itemPrice / assignment.assignedFriends.length;
-        assignment.assignedFriends.forEach((id) => {
-          assignment.portions[id] = portionPerFriend;
-        });
-      }
+      item.friends = item.friends.filter(friend => friend.id !== friendId);
 
-      return newAssignments;
+      return newItems;
     });
   };
 
-  const getFriendById = (friendId: string) => {
-    return friends.find((f) => f.id === friendId);
-  };
-
   const calculateFriendTotal = (friendId: string) => {
-    return assignments.reduce((total, assignment) => {
-      return total + (assignment.portions[friendId] || 0);
-    }, 0);
-  };
-
-  const getTotalAssigned = () => {
-    return assignments.reduce((total, assignment) => {
-      return (
-        total +
-        Object.values(assignment.portions).reduce(
-          (sum, portion) => sum + portion,
-          0
-        )
-      );
+    return receiptItems.reduce((total, item) => {
+      if (!item.friends) return total;
+      const friendInItem = item.friends.find(f => f.id === friendId);
+      if (friendInItem) {
+        const itemPrice = item.totalPrice;
+        const portionPerFriend = itemPrice / item.friends.length;
+        return total + portionPerFriend;
+      }
+      return total;
     }, 0);
   };
 
@@ -152,8 +181,8 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
     (sum, item) => sum + item.totalPrice,
     0
   );
-  const totalAssigned = getTotalAssigned();
-  const unassigned = subtotal - totalAssigned;
+
+  const grandTotal = subtotal + receipt.tax;
 
   const filteredFriends = friends.filter(
     (friend) =>
@@ -164,9 +193,13 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
   );
 
   const closeModal = () => {
-    setShowFriendSelector(false);
-    setSelectedItem(null);
-    setSearchQuery("");
+    setIsClosing(true);
+    setTimeout(() => {
+      setShowFriendSelector(false);
+      setSelectedItem(null);
+      setSearchQuery("");
+      setIsClosing(false);
+    }, 300);
   };
 
   if (loading) {
@@ -185,38 +218,31 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
   return (
     <div className="max-w-2xl w-full mx-auto -mt-4">
       <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Header */}
         <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-6 py-4 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-5 h-5 text-purple-300" />
-              </button>
-            )}
+          <h3 className="text-xl font-bold text-white flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg">
-              <Users className="w-6 h-6 text-purple-300" />
+              <FileText className="w-6 h-6 text-purple-300" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Split Bill</h3>
-              <p className="text-purple-200 text-sm">
-                Assign friends to items • {receipt.storeName}
-              </p>
-            </div>
-          </div>
+            {receipt.storeName}
+          </h3>
+          <p className="text-purple-200 text-sm ml-[3.35rem]">
+            {receipt.items.length} items •{" "}
+            {new Date(receipt.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
         </div>
 
         <div className="p-6">
-          {/* Items List */}
           <div className="space-y-4 mb-8">
             <h4 className="text-lg font-semibold text-white mb-4">
               Assign Items
             </h4>
             {receipt.items.map((item, itemIndex) => {
-              const assignment = assignments[itemIndex];
-              const assignedFriends = assignment?.assignedFriends || [];
+              const itemWithFriends = receiptItems[itemIndex];
+              const assignedFriends = itemWithFriends?.friends || [];
 
               return (
                 <div
@@ -230,7 +256,8 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
                       </h5>
                       <p className="text-purple-200 text-sm">
                         {item.quantity}× ${item.unitPrice.toFixed(2)} = $
-                        {item.totalPrice.toFixed(2)}
+                        {item.totalPrice.toFixed(2)} (
+                        {(item.totalPrice * HBAR_RATE).toFixed(2)} ℏ)
                       </p>
                     </div>
                     <button
@@ -238,7 +265,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
                         setSelectedItem(itemIndex);
                         setShowFriendSelector(true);
                       }}
-                      className="p-2 bg-purple-600/20 text-purple-300 rounded-lg border border-purple-400/30 hover:bg-purple-600/30 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 hover:text-purple-200 transition-all duration-200 border border-white/10 hover:border-white/30 cursor-pointer"
                     >
                       <UserPlus className="w-4 h-4" />
                     </button>
@@ -246,32 +273,32 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
 
                   {assignedFriends.length > 0 ? (
                     <div className="space-y-2">
-                      {assignedFriends.map((friendId) => {
-                        const friend = getFriendById(friendId);
-                        const portion = assignment.portions[friendId] || 0;
+                      {assignedFriends.map((assignedFriend) => {
+                        const portion = assignedFriend ? (itemWithFriends.totalPrice / assignedFriends.length) : 0;
 
                         return (
-                          <div
-                            key={friendId}
-                            className="flex items-center justify-between bg-white/10 rounded-lg p-3 animate-in slide-in-from-left duration-200"
-                          >
-                            <div>
-                              <span className="text-white font-medium">
-                                {friend?.nickname}
-                              </span>
-                              <span className="text-purple-200 text-sm ml-2">
-                                ${portion.toFixed(2)}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() =>
-                                removeFriendFromItem(itemIndex, friendId)
-                              }
-                              className="p-1 text-red-400 hover:bg-red-500/20 rounded cursor-pointer"
+                                                      <div
+                              key={assignedFriend.id}
+                              className="flex items-center justify-between bg-white/10 rounded-lg p-3 animate-in slide-in-from-left duration-200"
                             >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
+                              <div>
+                                <span className="text-white font-medium">
+                                  {assignedFriend.nickname}
+                                </span>
+                                <span className="text-purple-200 text-sm ml-2">
+                                  ${portion.toFixed(2)} (
+                                  {(portion * HBAR_RATE).toFixed(2)} ℏ)
+                                </span>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  removeFriendFromItem(itemIndex, assignedFriend.id)
+                                }
+                                className="p-1 text-white hover:bg-white/20 rounded cursor-pointer"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                         );
                       })}
                     </div>
@@ -287,9 +314,8 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
             })}
           </div>
 
-          {/* Summary */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-6">
-            <h4 className="text-lg font-semibold text-white mb-4">Summary</h4>
+            <h4 className="text-lg font-semibold text-white mb-3">Summary</h4>
 
             <div className="space-y-2 mb-4">
               {friends.map((friend) => {
@@ -299,137 +325,226 @@ const Bill: React.FC<BillProps> = ({ receipt, onBack, onSave }) => {
                 return (
                   <div
                     key={friend.id}
-                    className="flex justify-between items-center"
+                    className="flex justify-between items-center text-lg"
                   >
-                    <span className="text-white font-medium">
+                    <span className="text-purple-200 font-semibold">
                       {friend.nickname}
                     </span>
                     <span className="text-purple-200 font-semibold">
-                      ${total.toFixed(2)}
+                      ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)} ℏ)
                     </span>
                   </div>
                 );
               })}
             </div>
 
-            <div className="border-t border-white/10 pt-4 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-white">Subtotal</span>
-                <span className="text-white">${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-white">Assigned</span>
-                <span className="text-green-400">
-                  ${totalAssigned.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-white">Unassigned</span>
-                <span
-                  className={
-                    unassigned > 0 ? "text-yellow-400" : "text-green-400"
-                  }
-                >
-                  ${unassigned.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center font-semibold text-lg pt-2 border-t border-white/10">
-                <span className="text-white">Tax & Fees</span>
-                <span className="text-white">${receipt.tax.toFixed(2)}</span>
+            <div>
+              <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-white">
+                  <span className="font-semibold text-lg">Subtotal</span>
+                  <span className="font-semibold text-lg">
+                    ${subtotal.toFixed(2)} ({(subtotal * HBAR_RATE).toFixed(2)}{" "}
+                    ℏ)
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-purple-200">
+                  <span className="font-semibold text-lg">Tax & Fees</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg bg-gradient-to-r">
+                      ${receipt.tax.toFixed(2)} (
+                      {(receipt.tax * HBAR_RATE).toFixed(2)} ℏ)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
+
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-lg text-white">
+                    Total
+                  </span>
+                  <span className="font-semibold text-lg bg-gradient-to-r text-white">
+                    ${grandTotal.toFixed(2)} (
+                    {(grandTotal * HBAR_RATE).toFixed(2)} ℏ)
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="flex gap-3">
-            <button
-              onClick={() => onSave?.(assignments)}
-              disabled={unassigned > 0}
-              className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
-            >
-              {unassigned > 0
-                ? "Assign All Items First"
-                : "Continue to Payment"}
+                          <button
+                onClick={() => {
+                  const updatedReceipt = {
+                    ...receipt,
+                    items: receiptItems
+                  };
+                  onSave?.(updatedReceipt);
+                }}
+                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+              >
+              Continue to Payment
             </button>
           </div>
         </div>
       </div>
 
       {showFriendSelector && selectedItem !== null && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-6 py-4 border-b border-white/10">
-              <div className="flex items-center justify-between">
-                <h4 className="text-lg font-semibold text-white">
-                  Select Friends
-                </h4>
-                <button
-                  onClick={closeModal}
-                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+        <>
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes fadeOut {
+              from { opacity: 1; }
+              to { opacity: 0; }
+            }
+            @keyframes slideIn {
+              from { 
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+              }
+              to { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+              }
+            }
+            @keyframes slideOut {
+              from { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+              }
+              to { 
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+              }
+            }
+            @keyframes slideInUp {
+              from {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            style={{
+              animation: isClosing
+                ? "fadeOut 300ms ease-out forwards"
+                : "fadeIn 300ms ease-out forwards",
+            }}
+          >
+            <div
+              className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl max-w-2xl w-full overflow-hidden"
+              style={{
+                animation: isClosing
+                  ? "slideOut 300ms ease-out forwards"
+                  : "slideIn 300ms ease-out forwards",
+              }}
+            >
+              <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-8 py-5 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xl font-semibold text-white">
+                    Select Friends
+                  </h4>
+                  <button
+                    onClick={closeModal}
+                    className="p-2.5 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="p-6">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
-                <input
-                  type="text"
-                  placeholder="Search friends..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 text-white rounded-xl border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none placeholder-white/50"
-                  autoFocus
-                />
-              </div>
+              <div className="p-8">
+                <div className="relative mb-6">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-white/50" />
+                  <input
+                    type="text"
+                    placeholder="Search friends by name or wallet address..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-14 pr-4 py-3 bg-white/10 text-white rounded-xl border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none placeholder-white/50"
+                    autoFocus
+                  />
+                </div>
 
-              <div className="max-h-80 overflow-y-auto">
-                <div className="space-y-3">
-                  {filteredFriends.length > 0 ? (
-                    filteredFriends.map((friend) => {
-                      const isAssigned = assignments[
-                        selectedItem
-                      ]?.assignedFriends.includes(friend.id);
+                <div className="h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2">
+                  <div className="grid grid-cols-3 gap-4">
+                    {filteredFriends.length > 0 ? (
+                      filteredFriends.map((friend, index) => {
+                        const isAssigned = selectedItem !== null && receiptItems[
+                          selectedItem
+                        ]?.friends?.some(f => f.id === friend.id);
 
-                      return (
-                        <button
-                          key={friend.id}
-                          onClick={() => {
-                            if (isAssigned) {
-                              removeFriendFromItem(selectedItem, friend.id);
-                            } else {
-                              assignFriendToItem(selectedItem, friend.id);
-                            }
-                          }}
-                          className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer animate-in slide-in-from-bottom duration-200 ${
-                            isAssigned
-                              ? "bg-purple-600/20 border-purple-400/50 text-white"
-                              : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20"
-                          }`}
-                        >
-                          <div className="text-left">
-                            <div className="font-medium">{friend.nickname}</div>
-                            <div className="text-sm opacity-75">
-                              {friend.friend_wallet_address}
+                        return (
+                          <button
+                            key={friend.id}
+                            onClick={() => {
+                              if (isAssigned) {
+                                removeFriendFromItem(selectedItem, friend.id);
+                              } else {
+                                assignFriendToItem(selectedItem, friend);
+                              }
+                            }}
+                            className={`relative flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                              isAssigned
+                                ? "bg-purple-600/20 border-purple-400/50 text-white shadow-lg shadow-purple-500/20"
+                                : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-white/10"
+                            }`}
+                            style={{
+                              animationDelay: `${index * 30}ms`,
+                              animation: "slideInUp 300ms ease-out forwards",
+                            }}
+                          >
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-fuchsia-400 rounded-full flex items-center justify-center mb-3 shadow-lg">
+                              <span className="text-white font-bold text-lg">
+                                {friend.nickname.charAt(0).toUpperCase()}
+                              </span>
                             </div>
-                          </div>
-                          {isAssigned && (
-                            <Check className="w-5 h-5 text-purple-300" />
-                          )}
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-white/60">No friends found</p>
-                    </div>
-                  )}
+
+                            <div className="text-center flex-1">
+                              <div className="font-semibold text-sm mb-1 truncate w-full">
+                                {friend.nickname}
+                              </div>
+                              <div className="text-xs opacity-75 font-mono truncate w-full">
+                                {friend.friend_wallet_address}
+                              </div>
+                            </div>
+
+                            {isAssigned && (
+                              <div className="absolute -top-2 -right-2 p-1.5 bg-purple-500 rounded-full shadow-lg">
+                                <Check className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="col-span-3 text-center pb-20 pt-10">
+                        <div className="p-">
+                          <p className="text-white/60 text-lg">
+                            No friends found matching your search
+                          </p>
+                          <p className="text-white/40 text-base mt-2">
+                            Try adjusting your search terms
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

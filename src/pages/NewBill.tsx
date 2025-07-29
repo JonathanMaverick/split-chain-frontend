@@ -117,8 +117,7 @@ const NewBill = () => {
                 No Items Detected
               </div>
               <div className="text-red-200">
-                No items were found in your receipt. Please try again with a
-                clearer image or different file.
+                No items were found in your receipt.
               </div>
             </div>
           )}
