@@ -1,8 +1,8 @@
 export interface Friend {
   ID: string;
-  UserWalletAddress?: string;
-  FriendWalletAddress: string;
-  Nickname: string;
+  user_wallet_address?: string;
+  friend_wallet_address: string;
+  nickname: string;
   User?: User;
   Friend?: User;
 }
