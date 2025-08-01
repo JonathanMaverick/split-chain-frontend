@@ -44,6 +44,17 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   }, [showFriendSelector]);
 
   useEffect(() => {
+    // const fetchFriends = async () => {
+    //   try {
+    //     setLoading(true);
+    //     const friends = await FriendService.getCurrentUserFriends();
+    //     setFriends(friends);
+    //   } catch (err) {
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchFriends = async () => {
       try {
         setLoading(true);
@@ -170,7 +181,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
       if (!item.friends) return total;
       const friendInItem = item.friends.find((f) => f.ID === friendID);
       if (friendInItem) {
-        const itemPrice = item.totalPrice;
+        const itemPrice = item.price;
         const portionPerFriend = itemPrice / item.friends.length;
         return total + portionPerFriend;
       }
@@ -178,10 +189,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
     }, 0);
   };
 
-  const subtotal = receipt.items.reduce(
-    (sum, item) => sum + item.totalPrice,
-    0
-  );
+  const subtotal = receipt.items.reduce((sum, item) => sum + item.price, 0);
 
   const grandTotal = subtotal + receipt.tax;
 
@@ -228,7 +236,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
           </h3>
           <p className="text-purple-200 text-sm ml-[3.35rem]">
             {receipt.items.length} items •{" "}
-            {new Date(receipt.date).toLocaleDateString("en-US", {
+            {new Date(receipt.billDate).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -256,9 +264,9 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                         {item.name}
                       </h5>
                       <p className="text-purple-200 text-sm">
-                        {item.quantity}× ${item.unitPrice.toFixed(2)} = $
-                        {item.totalPrice.toFixed(2)} (
-                        {(item.totalPrice * HBAR_RATE).toFixed(2)} ℏ)
+                        {item.quantity}× ${item.price.toFixed(2)} = $
+                        {item.price.toFixed(2)} (
+                        {(item.price * HBAR_RATE).toFixed(2)} ℏ)
                       </p>
                     </div>
                     <button
@@ -276,7 +284,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                     <div className="space-y-2">
                       {assignedFriends.map((assignedFriend) => {
                         const portion = assignedFriend
-                          ? itemWithFriends.totalPrice / assignedFriends.length
+                          ? itemWithFriends.price / assignedFriends.length
                           : 0;
 
                         return (

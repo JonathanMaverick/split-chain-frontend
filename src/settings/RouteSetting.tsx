@@ -4,6 +4,8 @@ import History from "../pages/History";
 import Participant from "../pages/Participant";
 import NewBill from "../pages/NewBill";
 import BillTest from "../pages/BillTest";
+import ViewBill from "../pages/ViewBill";
+import CreatedBills from "../pages/CreatedBills";
 
 export const RouteSetting: IRoute[] = [
   {
@@ -27,13 +29,23 @@ export const RouteSetting: IRoute[] = [
     element: <History />,
   },
   {
-    name: "Bill-Teswt",
+    name: "Bill-Test",
     path: "/bill",
     element: <BillTest />,
+  },
+  {
+    name: "Created Bills",
+    path: "/created-bills",
+    element: <CreatedBills />,
   },
   {
     name: "Participant",
     path: "/participant",
     element: <Participant />,
+  },
+  {
+    name: "View Bill",
+    path: "/view-bill/:billId",
+    element: <ViewBill />,
   },
 ];

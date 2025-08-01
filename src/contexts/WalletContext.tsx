@@ -86,13 +86,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           if (id) {
             setAccountId(id);
             setIsLoggedIn(true);
-            localStorage.setItem("wallet_account_id", id);
-
             try {
               const balanceRes = await WalletService.checkBalance();
               setBalance(balanceRes);
+              console.log("Balance d:", balanceRes);
             } catch (error) {
-              console.error("Error fetching balance:", error);
+              console.error("Error fetching balancesss:", error);
             }
 
             try {
@@ -104,7 +103,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
               console.log("User register failed:", err);
             }
 
-            navigate("/upload");
+            navigate("/new-bill");
           }
 
           clearInterval(checkConnected);

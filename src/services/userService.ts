@@ -8,7 +8,7 @@ const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}${
 export const UserService = {
   async registerUser(user: User) {
     try {
-      const response = await axios.post(`${BASE_URL}/register`, {
+      const response = await axios.post(`${BASE_URL}/users/`, {
         wallet_address: user.wallet_address,
       });
       return response.data;

@@ -1,16 +1,27 @@
 import React, { useState } from "react";
 import { Edit3, Check, X, Plus, Minus, Trash2, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface BillDetailsProps {
   receipt: Receipt;
   onChange?: (updated: Receipt) => void;
+  createBill?: (receipt: Receipt) => Promise<void>;
 }
 
-const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
+const BillDetails: React.FC<BillDetailsProps> = ({
+  receipt,
+  onChange,
+  createBill,
+}) => {
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [editingTax, setEditingTax] = useState(false);
+  const [editingStoreName, setEditingStoreName] = useState(false);
+  const [editingBillDate, setEditingBillDate] = useState(false);
   const [tempItem, setTempItem] = useState<ReceiptItem | null>(null);
   const [tempTax, setTempTax] = useState("");
+  const [tempStoreName, setTempStoreName] = useState("");
+  const [tempBillDate, setTempBillDate] = useState("");
+  const navigate = useNavigate();
 
   const updateItem = (idx: number, updatedItem: ReceiptItem) => {
     const newItems = receipt.items.map((item, i) =>
@@ -33,7 +44,7 @@ const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
     if (tempItem) {
       const updatedItem = {
         ...tempItem,
-        unitPrice: tempItem.totalPrice / tempItem.quantity,
+        unitPrice: tempItem.price / tempItem.quantity,
       };
       updateItem(idx, updatedItem);
     }
@@ -84,30 +95,149 @@ const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
     setTempTax("");
   };
 
-  const subtotal = receipt.items.reduce(
-    (sum, item) => sum + item.totalPrice,
-    0
-  );
+  const startEditingStoreName = () => {
+    setEditingStoreName(true);
+    setTempStoreName(receipt.storeName);
+  };
+
+  const saveStoreNameEdit = () => {
+    if (tempStoreName.trim()) {
+      onChange?.({ ...receipt, storeName: tempStoreName.trim() });
+    }
+    setEditingStoreName(false);
+    setTempStoreName("");
+  };
+
+  const cancelStoreNameEdit = () => {
+    setEditingStoreName(false);
+    setTempStoreName("");
+  };
+
+  const startEditingBillDate = () => {
+    setEditingBillDate(true);
+    const date = new Date(receipt.billDate);
+    setTempBillDate(date.toISOString().split('T')[0]);
+  };
+
+  const saveBillDateEdit = () => {
+    if (tempBillDate) {
+      const newDate = new Date(tempBillDate);
+      if (!isNaN(newDate.getTime())) {
+        onChange?.({ ...receipt, billDate: newDate.toISOString() });
+      }
+    }
+    setEditingBillDate(false);
+    setTempBillDate("");
+  };
+
+  const cancelBillDateEdit = () => {
+    setEditingBillDate(false);
+    setTempBillDate("");
+  };
+
+  const handleSplitBill = () => {
+    createBill?.(receipt)
+      .then(() => {
+        navigate("/bill");
+      })
+      .catch((error) => {
+        console.error("Error creating bill:", error);
+        alert("Failed to create bill. Please try again.");
+      });
+  };
+
+  const handleSaveForLater = () => {
+    createBill?.(receipt)
+      .then(() => {
+        navigate("/new-bill");
+      })
+      .catch((error) => {
+        console.error("Error creating bill:", error);
+        alert("Failed to create bill. Please try again.");
+      });
+  };
+
+  const subtotal = receipt.items.reduce((sum, item) => sum + item.price, 0);
   const grandTotal = subtotal + receipt.tax;
 
   return (
     <div className="max-w-2xl w-full mx-auto -mt-4">
       <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl">
         <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-6 py-4 border-b border-white/10">
-          <h3 className="text-xl font-bold text-white flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg">
               <FileText className="w-6 h-6 text-purple-300" />
             </div>
-            {receipt.storeName}
-          </h3>
-          <p className="text-purple-200 text-sm ml-[3.35rem]">
-            {receipt.items.length} items •{" "}
-            {new Date(receipt.date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+            {editingStoreName ? (
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  value={tempStoreName}
+                  onChange={(e) => setTempStoreName(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-white/10 text-white text-xl font-bold rounded-lg border border-purple-400 focus:border-purple-300 focus:bg-white/15 outline-none"
+                  placeholder="Store name"
+                  autoFocus
+                  onKeyPress={(e) => e.key === "Enter" && saveStoreNameEdit()}
+                />
+                <button
+                  onClick={saveStoreNameEdit}
+                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={cancelStoreNameEdit}
+                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={startEditingStoreName}
+                className="text-xl font-bold text-white hover:text-purple-200 transition-colors cursor-pointer group flex items-center gap-2"
+              >
+                {receipt.storeName}
+                <Edit3 className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+              </button>
+            )}
+          </div>
+          <div className="ml-[3.35rem] mt-2">
+            {editingBillDate ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={tempBillDate}
+                  onChange={(e) => setTempBillDate(e.target.value)}
+                  className="px-3 py-1 bg-white/10 text-purple-200 text-sm rounded-lg border border-purple-400 focus:border-purple-300 focus:bg-white/15 outline-none"
+                  autoFocus
+                />
+                <button
+                  onClick={saveBillDateEdit}
+                  className="p-1 text-purple-200 hover:bg-white/10 rounded transition-colors cursor-pointer"
+                >
+                  <Check className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={cancelBillDateEdit}
+                  className="p-1 text-purple-200 hover:bg-white/10 rounded transition-colors cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={startEditingBillDate}
+                className="text-purple-200 text-sm hover:text-purple-100 transition-colors cursor-pointer group flex items-center gap-1"
+              >
+                {new Date(receipt.billDate).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+                <Edit3 className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="p-6">
@@ -151,9 +281,9 @@ const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
                             <input
                               min="0"
                               step="0.01"
-                              value={tempItem.totalPrice}
+                              value={tempItem.price}
                               onChange={(e) =>
-                                updateTempItem("totalPrice", e.target.value)
+                                updateTempItem("price", e.target.value)
                               }
                               className="w-full px-4 py-2.5 bg-white/10 text-white text-right rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-lg font-semibold"
                               placeholder="0.00"
@@ -192,13 +322,13 @@ const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
                           {item.name}
                         </div>
                         <div className="text-purple-200 text-sm">
-                          ${item.unitPrice.toFixed(2)} each
+                          ${item.price.toFixed(2)} each
                         </div>
                       </div>
 
                       <div className="text-right">
                         <div className="text-white font-bold text-xl">
-                          ${item.totalPrice.toFixed(2)}
+                          ${item.price.toFixed(2)}
                         </div>
                       </div>
 
@@ -289,10 +419,16 @@ const BillDetails: React.FC<BillDetailsProps> = ({ receipt, onChange }) => {
           </div>
 
           <div className="mt-8 flex flex-col gap-3">
-            <button className="w-full px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer">
+            <button
+              className="w-full px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+              onClick={handleSplitBill}
+            >
               Split Bill
             </button>
-            <button className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-medium text-white transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer">
+            <button
+              className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-medium text-white transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer"
+              onClick={handleSaveForLater}
+            >
               Save for Later
             </button>
           </div>

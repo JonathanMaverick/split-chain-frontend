@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { ReceiptService } from "../services/receiptService";
 import BillDetails from "../components/BillDetails";
+import { BillService } from "../services/billService";
 
 const NewBill = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -16,7 +17,7 @@ const NewBill = () => {
   const [dragActive, setDragActive] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [useWebcam, setUseWebcam] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Receipt | null>(null);
 
   useEffect(() => {
     result && console.log("Result updated:", result);
@@ -61,6 +62,15 @@ const NewBill = () => {
     try {
       const res = await ReceiptService.postReceipt(uploadedFile);
       setResult(res);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCreateBill = async () => {
+    if (!result) return;
+    try {
+      await BillService.createBill(result);
     } finally {
       setProcessing(false);
     }
@@ -263,7 +273,11 @@ const NewBill = () => {
         ) : null}
 
         {result && Array.isArray(result.items) && result.items.length > 0 && (
-          <BillDetails receipt={result} onChange={setResult} />
+          <BillDetails
+            receipt={result}
+            onChange={setResult}
+            createBill={handleCreateBill}
+          />
         )}
       </div>
     </div>

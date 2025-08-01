@@ -1,4 +1,4 @@
-import { History, LogOut, Plus, Users, Zap } from "lucide-react";
+import { History, LogOut, Plus, Receipt, Users, Zap } from "lucide-react";
 import { useWallet } from "../contexts/WalletContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -19,6 +19,11 @@ export default function Navbar() {
       location.pathname === "/view-history"
     )
       return "history";
+    if (
+      location.pathname === "/created-bills" ||
+      location.pathname === "/view-bill/:billId"
+    )
+      return "created-bills";
     return "";
   };
 
@@ -38,6 +43,10 @@ export default function Navbar() {
 
   const handleNavigateToHistory = () => {
     navigate("/history");
+  };
+
+  const handleNavigateToCreatedBill = () => {
+    navigate("/created-bills");
   };
 
   const LoadingSpinner = () => (
@@ -106,6 +115,25 @@ export default function Navbar() {
               <div
                 className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-fuchsia-400 to-purple-400 transition-all duration-300 ${
                   activeTab === "friends" ? "w-full" : "w-0 group-hover:w-full"
+                }`}
+              ></div>
+            </button>
+
+            <button
+              onClick={handleNavigateToCreatedBill}
+              className={`relative flex items-center space-x-2 px-2 py-3 transition-all duration-300 cursor-pointer group ${
+                activeTab === "created-bills"
+                  ? "text-white"
+                  : "text-purple-300 hover:text-purple-100"
+              }`}
+            >
+              <Receipt className="w-4 h-4" />
+              <span>Created Bills</span>
+              <div
+                className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-fuchsia-400 to-purple-400 transition-all duration-300 ${
+                  activeTab === "created-bills"
+                    ? "w-full"
+                    : "w-0 group-hover:w-full"
                 }`}
               ></div>
             </button>
