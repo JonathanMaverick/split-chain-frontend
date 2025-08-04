@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Bill from "../components/Bill";
 import { BillService } from "../services/billService";
+import type { Receipt } from "../models/receipt";
 
 const ViewBill = () => {
   const { billId } = useParams<{ billId: string }>();
@@ -19,7 +20,7 @@ const ViewBill = () => {
     fetchBills();
   }, [billId]);
 
-  return <div className="">{bill && <Bill receipt={bill} />}</div>;
+  return <div>{bill && <Bill receipt={bill} />}</div>;
 };
 
 export default ViewBill;

@@ -1,4 +1,6 @@
-interface Receipt {
+import type { ReceiptItem } from "./receipt-item";
+
+export interface Receipt {
   billId?: string;
   storeName: string;
   billDate: string;
@@ -7,4 +9,5 @@ interface Receipt {
   totalAmount: number;
   items: ReceiptItem[];
   creatorId: string;
+  createdAt?: string;
 }

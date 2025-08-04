@@ -1,6 +1,8 @@
-interface ReceiptItem {
+import type { Participant } from "./participant";
+
+export interface ReceiptItem {
   name: string;
   quantity: number;
   price: number;
-  friends?: Friend[];
+  participants: Participant[];
 }

@@ -6,6 +6,7 @@ import NewBill from "../pages/NewBill";
 import BillTest from "../pages/BillTest";
 import ViewBill from "../pages/ViewBill";
 import CreatedBills from "../pages/CreatedBills";
+import EditBill from "../pages/EditBill";
 
 export const RouteSetting: IRoute[] = [
   {
@@ -47,5 +48,10 @@ export const RouteSetting: IRoute[] = [
     name: "View Bill",
     path: "/view-bill/:billId",
     element: <ViewBill />,
+  },
+  {
+    name: "Edit Bill",
+    path: "/edit-bill/:billId",
+    element: <EditBill />,
   },
 ];

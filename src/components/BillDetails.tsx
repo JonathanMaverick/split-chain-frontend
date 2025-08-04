@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Edit3, Check, X, Plus, Minus, Trash2, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import type { Receipt } from "../models/receipt";
+import type { ReceiptItem } from "../models/receipt-item";
 
 interface BillDetailsProps {
   receipt: Receipt;
@@ -116,7 +118,7 @@ const BillDetails: React.FC<BillDetailsProps> = ({
   const startEditingBillDate = () => {
     setEditingBillDate(true);
     const date = new Date(receipt.billDate);
-    setTempBillDate(date.toISOString().split('T')[0]);
+    setTempBillDate(date.toISOString().split("T")[0]);
   };
 
   const saveBillDateEdit = () => {
@@ -135,21 +137,10 @@ const BillDetails: React.FC<BillDetailsProps> = ({
     setTempBillDate("");
   };
 
-  const handleSplitBill = () => {
+  const handleSave = () => {
     createBill?.(receipt)
       .then(() => {
-        navigate("/bill");
-      })
-      .catch((error) => {
-        console.error("Error creating bill:", error);
-        alert("Failed to create bill. Please try again.");
-      });
-  };
-
-  const handleSaveForLater = () => {
-    createBill?.(receipt)
-      .then(() => {
-        navigate("/new-bill");
+        navigate("/created-bills");
       })
       .catch((error) => {
         console.error("Error creating bill:", error);
@@ -421,16 +412,16 @@ const BillDetails: React.FC<BillDetailsProps> = ({
           <div className="mt-8 flex flex-col gap-3">
             <button
               className="w-full px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
-              onClick={handleSplitBill}
+              onClick={handleSave}
             >
-              Split Bill
+              Save
             </button>
-            <button
+            {/* <button
               className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-medium text-white transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer"
               onClick={handleSaveForLater}
             >
               Save for Later
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

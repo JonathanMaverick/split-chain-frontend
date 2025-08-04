@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { UserPlus, X, Check, Search, FileText } from "lucide-react";
 import type { Friend } from "../models/friend";
+import { FriendService } from "../services/friendService";
+import { BillService } from "../services/billService";
+import { useWallet } from "../contexts/WalletContext";
+import type { ReceiptItem } from "../models/receipt-item";
+import type { Participant } from "../models/participant";
+import type { Receipt } from "../models/receipt";
 
 interface BillProps {
   receipt: Receipt;
@@ -18,6 +24,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   const [showFriendSelector, setShowFriendSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isClosing, setIsClosing] = useState(false);
+  const { accountId } = useWallet();
 
   useEffect(() => {
     console.log(receiptItems);
@@ -26,8 +33,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   useEffect(() => {
     const initializedItems = receipt.items.map((item) => ({
       ...item,
-      friends: [],
-      portions: {},
+      participants: [],
     }));
     setReceiptItems(initializedItems);
   }, [receipt.items]);
@@ -44,100 +50,17 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   }, [showFriendSelector]);
 
   useEffect(() => {
-    // const fetchFriends = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const friends = await FriendService.getCurrentUserFriends();
-    //     setFriends(friends);
-    //   } catch (err) {
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
     const fetchFriends = async () => {
       try {
         setLoading(true);
 
-        const mockFriends: Friend[] = [
-          {
-            ID: "1",
-            Nickname: "John Doe",
-            FriendWalletAddress: "0x1234...5678",
-          },
-          {
-            ID: "2",
-            Nickname: "Jane Smith",
-            FriendWalletAddress: "0x8765...4321",
-          },
-          {
-            ID: "3",
-            Nickname: "Bob Johnson",
-            FriendWalletAddress: "0xabcd...efgh",
-          },
-          {
-            ID: "4",
-            Nickname: "Alice Brown",
-            FriendWalletAddress: "0x9876...1234",
-          },
-          {
-            ID: "5",
-            Nickname: "Michael Chen",
-            FriendWalletAddress: "0x2468...1357",
-          },
-          {
-            ID: "6",
-            Nickname: "Sarah Wilson",
-            FriendWalletAddress: "0x1357...2468",
-          },
-          {
-            ID: "7",
-            Nickname: "David Kim",
-            FriendWalletAddress: "0x5678...9012",
-          },
-          {
-            ID: "8",
-            Nickname: "Emma Davis",
-            FriendWalletAddress: "0x9012...3456",
-          },
-          {
-            ID: "9",
-            Nickname: "James Taylor",
-            FriendWalletAddress: "0x3456...7890",
-          },
-          {
-            ID: "10",
-            Nickname: "Lisa Garcia",
-            FriendWalletAddress: "0x7890...2345",
-          },
-          {
-            ID: "11",
-            Nickname: "Ryan Martinez",
-            FriendWalletAddress: "0x2345...6789",
-          },
-          {
-            ID: "12",
-            Nickname: "Ashley Lee",
-            FriendWalletAddress: "0x6789...0123",
-          },
-          {
-            ID: "13",
-            Nickname: "Kevin Wong",
-            FriendWalletAddress: "0x0123...4567",
-          },
-          {
-            ID: "14",
-            Nickname: "Amanda Clark",
-            FriendWalletAddress: "0x4567...8901",
-          },
-          {
-            ID: "15",
-            Nickname: "Chris Anderson",
-            FriendWalletAddress: "0x8901...2345",
-          },
-        ];
+        if (!accountId) {
+          console.error("No wallet connected");
+          return;
+        }
 
-        setFriends(mockFriends);
+        const friends = await FriendService.getFriends(accountId);
+        setFriends(friends);
       } catch (error) {
         console.error("Failed to fetch friends:", error);
       } finally {
@@ -146,44 +69,52 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
     };
 
     fetchFriends();
-  }, []);
+  }, [accountId]);
 
   const assignFriendToItem = (itemIndex: number, friend: Friend) => {
     setReceiptItems((prev) => {
       const newItems = [...prev];
       const item = newItems[itemIndex];
 
-      if (!item.friends) item.friends = [];
+      if (!item.participants) item.participants = [];
 
-      if (!item.friends.some((f) => f.ID === friend.ID)) {
-        item.friends.push(friend);
+      // Convert Friend to Participant
+      const participant: Participant = {
+        participantId: friend.friend_wallet_address,
+        isPaid: false,
+      };
+
+      if (!item.participants.some((p) => p.participantId === friend.friend_wallet_address)) {
+        item.participants.push(participant);
       }
 
       return newItems;
     });
   };
 
-  const removeFriendFromItem = (itemIndex: number, friendID: string) => {
+  const removeFriendFromItem = (itemIndex: number, friendWalletAddress: string) => {
     setReceiptItems((prev) => {
       const newItems = [...prev];
       const item = newItems[itemIndex];
 
-      if (!item.friends) item.friends = [];
+      if (!item.participants) item.participants = [];
 
-      item.friends = item.friends.filter((friend) => friend.ID !== friendID);
+      item.participants = item.participants.filter(
+        (participant) => participant.participantId !== friendWalletAddress
+      );
 
       return newItems;
     });
   };
 
-  const calculateFriendTotal = (friendID: string) => {
+  const calculateFriendTotal = (friendWalletAddress: string) => {
     return receiptItems.reduce((total, item) => {
-      if (!item.friends) return total;
-      const friendInItem = item.friends.find((f) => f.ID === friendID);
-      if (friendInItem) {
+      if (!item.participants) return total;
+      const participantInItem = item.participants.find((p) => p.participantId === friendWalletAddress);
+      if (participantInItem) {
         const itemPrice = item.price;
-        const portionPerFriend = itemPrice / item.friends.length;
-        return total + portionPerFriend;
+        const portionPerParticipant = itemPrice / item.participants.length;
+        return total + portionPerParticipant;
       }
       return total;
     }, 0);
@@ -195,10 +126,10 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
   const filteredFriends = friends.filter(
     (friend) =>
-      friend.Nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.FriendWalletAddress.toLowerCase().includes(
-        searchQuery.toLowerCase()
-      )
+      friend.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      friend.friend_wallet_address
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   const closeModal = () => {
@@ -209,6 +140,24 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
       setSearchQuery("");
       setIsClosing(false);
     }, 300);
+  };
+
+  const handleContinueToPayment = async () => {
+    try {
+      const updatedReceipt = {
+        ...receipt,
+        items: receiptItems,
+      };
+      
+      // Update the bill with the new participant assignments
+      await BillService.updateBill(updatedReceipt);
+      
+      // Call the onSave callback if provided
+      onSave?.(updatedReceipt);
+    } catch (error) {
+      console.error("Failed to update bill:", error);
+      // You might want to show an error message to the user here
+    }
   };
 
   if (loading) {
@@ -250,8 +199,8 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
               Assign Items
             </h4>
             {receipt.items.map((item, itemIndex) => {
-              const itemWithFriends = receiptItems[itemIndex];
-              const assignedFriends = itemWithFriends?.friends || [];
+              const itemWithParticipants = receiptItems[itemIndex];
+              const assignedParticipants = itemWithParticipants?.participants || [];
 
               return (
                 <div
@@ -280,21 +229,24 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                     </button>
                   </div>
 
-                  {assignedFriends.length > 0 ? (
+                  {assignedParticipants.length > 0 ? (
                     <div className="space-y-2">
-                      {assignedFriends.map((assignedFriend) => {
-                        const portion = assignedFriend
-                          ? itemWithFriends.price / assignedFriends.length
+                      {assignedParticipants.map((participant) => {
+                        const portion = participant
+                          ? itemWithParticipants.price / assignedParticipants.length
                           : 0;
+
+                        // Find the corresponding friend for display
+                        const correspondingFriend = friends.find(f => f.friend_wallet_address === participant.participantId);
 
                         return (
                           <div
-                            key={assignedFriend.ID}
+                            key={participant.participantId}
                             className="flex items-center justify-between bg-white/10 rounded-lg p-3 animate-in slide-in-from-left duration-200"
                           >
                             <div>
                               <span className="text-white font-medium">
-                                {assignedFriend.Nickname}
+                                {correspondingFriend?.nickname || participant.participantId}
                               </span>
                               <span className="text-purple-200 text-sm ml-2">
                                 ${portion.toFixed(2)} (
@@ -305,7 +257,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                               onClick={() =>
                                 removeFriendFromItem(
                                   itemIndex,
-                                  assignedFriend.ID
+                                  participant.participantId
                                 )
                               }
                               className="p-1 text-white hover:bg-white/20 rounded cursor-pointer"
@@ -333,16 +285,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
             <div className="space-y-2 mb-4">
               {friends.map((friend) => {
-                const total = calculateFriendTotal(friend.ID);
+                const total = calculateFriendTotal(friend.friend_wallet_address);
                 if (total === 0) return null;
 
                 return (
                   <div
-                    key={friend.ID}
+                    key={friend.friend_wallet_address}
                     className="flex justify-between items-center text-lg"
                   >
                     <span className="text-purple-200 font-semibold">
-                      {friend.Nickname}
+                      {friend.nickname}
                     </span>
                     <span className="text-purple-200 font-semibold">
                       ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)} ℏ)
@@ -390,13 +342,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                const updatedReceipt = {
-                  ...receipt,
-                  items: receiptItems,
-                };
-                onSave?.(updatedReceipt);
-              }}
+              onClick={handleContinueToPayment}
               className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             >
               Continue to Payment
@@ -496,16 +442,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                       filteredFriends.map((friend, index) => {
                         const isAssigned =
                           selectedItem !== null &&
-                          receiptItems[selectedItem]?.friends?.some(
-                            (f) => f.ID === friend.ID
+                          receiptItems[selectedItem]?.participants?.some(
+                            (p) => p.participantId === friend.friend_wallet_address
                           );
 
                         return (
                           <button
-                            key={friend.ID}
+                            key={friend.friend_wallet_address}
                             onClick={() => {
                               if (isAssigned) {
-                                removeFriendFromItem(selectedItem, friend.ID);
+                                removeFriendFromItem(selectedItem, friend.friend_wallet_address);
                               } else {
                                 assignFriendToItem(selectedItem, friend);
                               }
@@ -522,16 +468,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                           >
                             <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-fuchsia-400 rounded-full flex items-center justify-center mb-3 shadow-lg">
                               <span className="text-white font-bold text-lg">
-                                {friend.Nickname.charAt(0).toUpperCase()}
+                                {friend.nickname.charAt(0).toUpperCase()}
                               </span>
                             </div>
 
                             <div className="text-center flex-1">
                               <div className="font-semibold text-sm mb-1 truncate w-full">
-                                {friend.Nickname}
+                                {friend.nickname}
                               </div>
                               <div className="text-xs opacity-75 font-mono truncate w-full">
-                                {friend.FriendWalletAddress}
+                                {friend.friend_wallet_address}
                               </div>
                             </div>
 

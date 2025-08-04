@@ -7,14 +7,18 @@ import {
   Loader2,
   AlertCircle,
   ChevronRight,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { BillService } from "../services/billService";
 import { useNavigate } from "react-router-dom";
+import type { Receipt } from "../models/receipt";
 
 export default function CreatedBills() {
   const [bills, setBills] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingBillId, setDeletingBillId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +51,39 @@ export default function CreatedBills() {
   const handleBillClick = (billId: string) => {
     navigate(`/view-bill/${billId}`);
     console.log("Navigate to bill detail:", billId);
+  };
+
+  const handleEditBill = (e: React.MouseEvent, billId: string) => {
+    e.stopPropagation();
+    navigate(`/edit-bill/${billId}`);
+    console.log("Navigate to edit bill:", billId);
+  };
+
+  const handleDeleteBill = async (e: React.MouseEvent, billId: string) => {
+    e.stopPropagation();
+
+    if (
+      window.confirm(
+        "Are you sure you want to delete this bill? This action cannot be undone."
+      )
+    ) {
+      try {
+        setDeletingBillId(billId);
+        await BillService.deleteBill(billId);
+
+        // Remove the deleted bill from the state
+        setBills((prevBills) =>
+          prevBills.filter((bill) => bill.billId !== billId)
+        );
+
+        console.log("Bill deleted successfully:", billId);
+      } catch (err) {
+        console.error("Failed to delete bill:", err);
+        alert("Failed to delete bill. Please try again.");
+      } finally {
+        setDeletingBillId(null);
+      }
+    }
   };
 
   if (loading) {
@@ -162,6 +199,30 @@ export default function CreatedBills() {
                           </div>
                           <div className="text-purple-200 text-sm">Total</div>
                         </div>
+
+                        <div className="flex items-center gap-2 ml-2">
+                          <button
+                            onClick={(e) => handleEditBill(e, bill.billId!)}
+                            className="p-2 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 hover:text-purple-200 transition-all duration-200 border border-white/10 hover:border-white/30"
+                            title="Edit Bill"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={(e) => handleDeleteBill(e, bill.billId!)}
+                            disabled={deletingBillId === bill.billId}
+                            className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 transition-all duration-200 border border-red-500/20 hover:border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Delete Bill"
+                          >
+                            {deletingBillId === bill.billId ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+
                         <ChevronRight className="w-6 h-6 text-purple-300 group-hover:translate-x-1 transition-transform duration-300" />
                       </div>
                     </div>

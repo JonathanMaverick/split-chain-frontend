@@ -10,6 +10,7 @@ import {
 import { ReceiptService } from "../services/receiptService";
 import BillDetails from "../components/BillDetails";
 import { BillService } from "../services/billService";
+import type { Receipt } from "../models/receipt";
 
 const NewBill = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
