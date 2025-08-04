@@ -22,4 +22,18 @@ export const UserService = {
       }
     }
   },
+  async getRate(): Promise<number> {
+    try {
+      const response = await axios.get(`${BASE_URL}/get-rate`);
+      return response.data.data;
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const errorMessage =
+          err.response?.data?.error || "Unknown error occurred";
+        throw new Error(errorMessage);
+      } else {
+        throw new Error("Unexpected error");
+      }
+    }
+  },
 };

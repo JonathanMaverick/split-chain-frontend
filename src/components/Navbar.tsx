@@ -1,4 +1,4 @@
-import { History, LogOut, Plus, Receipt, Users, Zap } from "lucide-react";
+import { LogOut, Plus, Receipt, Users, Zap } from "lucide-react";
 import { useWallet } from "../contexts/WalletContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -15,15 +15,12 @@ export default function Navbar() {
     )
       return "friends";
     if (
-      location.pathname === "/history" ||
-      location.pathname === "/view-history"
-    )
-      return "history";
-    if (
       location.pathname === "/created-bills" ||
       location.pathname === "/view-bill/:billId"
     )
       return "created-bills";
+    if (location.pathname === "/participated-bills")
+      return "participated-bills";
     return "";
   };
 
@@ -41,12 +38,12 @@ export default function Navbar() {
     navigate("/friends");
   };
 
-  const handleNavigateToHistory = () => {
-    navigate("/history");
-  };
-
   const handleNavigateToCreatedBill = () => {
     navigate("/created-bills");
+  };
+
+  const handleNavigateToParticipatedBills = () => {
+    navigate("/participated-bills");
   };
 
   const LoadingSpinner = () => (
@@ -139,18 +136,18 @@ export default function Navbar() {
             </button>
 
             <button
-              onClick={handleNavigateToHistory}
+              onClick={handleNavigateToParticipatedBills}
               className={`relative flex items-center space-x-2 px-2 py-3 transition-all duration-300 cursor-pointer group ${
-                activeTab === "history"
+                activeTab === "participated-bills"
                   ? "text-white"
                   : "text-purple-300 hover:text-purple-100"
               }`}
             >
-              <History className="w-4 h-4" />
-              <span>View History</span>
+              <Receipt className="w-4 h-4" />
+              <span>Participated Bills</span>
               <div
                 className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-fuchsia-400 to-purple-400 transition-all duration-300 ${
-                  activeTab === "history" ? "w-full" : "w-0 group-hover:w-full"
+                  activeTab === "participated-bills" ? "w-full" : "w-0 group-hover:w-full"
                 }`}
               ></div>
             </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserPlus, X, Check, Search, FileText } from "lucide-react";
 import type { Friend } from "../models/friend";
 import { FriendService } from "../services/friendService";
@@ -7,6 +8,7 @@ import { useWallet } from "../contexts/WalletContext";
 import type { ReceiptItem } from "../models/receipt-item";
 import type { Participant } from "../models/participant";
 import type { Receipt } from "../models/receipt";
+import { UserService } from "../services/userService";
 
 interface BillProps {
   receipt: Receipt;
@@ -14,9 +16,9 @@ interface BillProps {
   onSave?: (receipt: Receipt) => void;
 }
 
-const HBAR_RATE = 3.5;
-
 const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
+  const navigate = useNavigate();
+  const [HBAR_RATE, setHBAR_RATE] = useState(0);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,17 +28,32 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   const [isClosing, setIsClosing] = useState(false);
   const { accountId } = useWallet();
 
-  useEffect(() => {
-    console.log(receiptItems);
-  }, [receiptItems]);
+  const currentUserFriend: Friend = {
+    ID: "current_user",
+    friend_wallet_address: accountId || "",
+    nickname: "You",
+  };
 
   useEffect(() => {
     const initializedItems = receipt.items.map((item) => ({
       ...item,
-      participants: [],
     }));
     setReceiptItems(initializedItems);
   }, [receipt.items]);
+
+  useEffect(() => {
+    const fetchHBARRate = async () => {
+      try {
+        const rate = await UserService.getRate();
+        console.log("Fetched HBAR rate:", rate);
+        setHBAR_RATE(rate);
+      } catch (error) {
+        console.error("Failed to fetch HBAR rate:", error);
+      }
+    };
+
+    fetchHBARRate();
+  }, []);
 
   useEffect(() => {
     if (showFriendSelector) {
@@ -78,13 +95,16 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
       if (!item.participants) item.participants = [];
 
-      // Convert Friend to Participant
       const participant: Participant = {
         participantId: friend.friend_wallet_address,
         isPaid: false,
       };
 
-      if (!item.participants.some((p) => p.participantId === friend.friend_wallet_address)) {
+      if (
+        !item.participants.some(
+          (p) => p.participantId === friend.friend_wallet_address
+        )
+      ) {
         item.participants.push(participant);
       }
 
@@ -92,7 +112,10 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
     });
   };
 
-  const removeFriendFromItem = (itemIndex: number, friendWalletAddress: string) => {
+  const removeFriendFromItem = (
+    itemIndex: number,
+    friendWalletAddress: string
+  ) => {
     setReceiptItems((prev) => {
       const newItems = [...prev];
       const item = newItems[itemIndex];
@@ -110,7 +133,9 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   const calculateFriendTotal = (friendWalletAddress: string) => {
     return receiptItems.reduce((total, item) => {
       if (!item.participants) return total;
-      const participantInItem = item.participants.find((p) => p.participantId === friendWalletAddress);
+      const participantInItem = item.participants.find(
+        (p) => p.participantId === friendWalletAddress
+      );
       if (participantInItem) {
         const itemPrice = item.price;
         const portionPerParticipant = itemPrice / item.participants.length;
@@ -124,7 +149,9 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
   const grandTotal = subtotal + receipt.tax;
 
-  const filteredFriends = friends.filter(
+  // Combine friends with current user and filter
+  const allParticipants = [currentUserFriend, ...friends];
+  const filteredFriends = allParticipants.filter(
     (friend) =>
       friend.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       friend.friend_wallet_address
@@ -148,15 +175,15 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
         ...receipt,
         items: receiptItems,
       };
-      
-      // Update the bill with the new participant assignments
+
       await BillService.updateBill(updatedReceipt);
-      
-      // Call the onSave callback if provided
+
       onSave?.(updatedReceipt);
+      
+      // Navigate to payment status page
+      navigate(`/payment-status/${receipt.billId}`);
     } catch (error) {
       console.error("Failed to update bill:", error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -200,7 +227,8 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
             </h4>
             {receipt.items.map((item, itemIndex) => {
               const itemWithParticipants = receiptItems[itemIndex];
-              const assignedParticipants = itemWithParticipants?.participants || [];
+              const assignedParticipants =
+                itemWithParticipants?.participants || [];
 
               return (
                 <div
@@ -233,22 +261,46 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                     <div className="space-y-2">
                       {assignedParticipants.map((participant) => {
                         const portion = participant
-                          ? itemWithParticipants.price / assignedParticipants.length
+                          ? itemWithParticipants.price /
+                            assignedParticipants.length
                           : 0;
 
-                        // Find the corresponding friend for display
-                        const correspondingFriend = friends.find(f => f.friend_wallet_address === participant.participantId);
+                        const correspondingFriend = allParticipants.find(
+                          (f) =>
+                            f.friend_wallet_address ===
+                            participant.participantId
+                        );
+
+                        const isCurrentUser =
+                          correspondingFriend?.ID === "current_user";
 
                         return (
                           <div
                             key={participant.participantId}
-                            className="flex items-center justify-between bg-white/10 rounded-lg p-3 animate-in slide-in-from-left duration-200"
+                            className={`flex items-center justify-between rounded-lg p-3 animate-in slide-in-from-left duration-200 ${
+                              isCurrentUser
+                                ? "bg-violet-500/10 border border-violet-400/30"
+                                : "bg-white/10"
+                            }`}
                           >
                             <div>
-                              <span className="text-white font-medium">
-                                {correspondingFriend?.nickname || participant.participantId}
+                              <span
+                                className={`font-medium ${
+                                  isCurrentUser
+                                    ? "text-violet-200"
+                                    : "text-white"
+                                }`}
+                              >
+                                {correspondingFriend?.nickname ||
+                                  participant.participantId}
                               </span>
-                              <span className="text-purple-200 text-sm ml-2">
+                              <span
+                                className={`text-sm ml-2 ${
+                                  isCurrentUser
+                                    ? "text-violet-300"
+                                    : "text-purple-200"
+                                }`}
+                              >
                                 ${portion.toFixed(2)} (
                                 {(portion * HBAR_RATE).toFixed(2)} ℏ)
                               </span>
@@ -260,7 +312,11 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                                   participant.participantId
                                 )
                               }
-                              className="p-1 text-white hover:bg-white/20 rounded cursor-pointer"
+                              className={`p-1 rounded cursor-pointer ${
+                                isCurrentUser
+                                  ? "text-violet-200 hover:bg-violet-500/20"
+                                  : "text-white hover:bg-white/20"
+                              }`}
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -284,19 +340,31 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
             <h4 className="text-lg font-semibold text-white mb-3">Summary</h4>
 
             <div className="space-y-2 mb-4">
-              {friends.map((friend) => {
-                const total = calculateFriendTotal(friend.friend_wallet_address);
+              {allParticipants.map((friend) => {
+                const total = calculateFriendTotal(
+                  friend.friend_wallet_address
+                );
                 if (total === 0) return null;
+
+                const isCurrentUser = friend.ID === "current_user";
 
                 return (
                   <div
                     key={friend.friend_wallet_address}
                     className="flex justify-between items-center text-lg"
                   >
-                    <span className="text-purple-200 font-semibold">
+                    <span
+                      className={`font-semibold ${
+                        isCurrentUser ? "text-violet-200" : "text-purple-200"
+                      }`}
+                    >
                       {friend.nickname}
                     </span>
-                    <span className="text-purple-200 font-semibold">
+                    <span
+                      className={`font-semibold ${
+                        isCurrentUser ? "text-violet-200" : "text-purple-200"
+                      }`}
+                    >
                       ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)} ℏ)
                     </span>
                   </div>
@@ -412,7 +480,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
               <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-8 py-5 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xl font-semibold text-white">
-                    Select Friends
+                    Select Participants
                   </h4>
                   <button
                     onClick={closeModal}
@@ -443,22 +511,32 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                         const isAssigned =
                           selectedItem !== null &&
                           receiptItems[selectedItem]?.participants?.some(
-                            (p) => p.participantId === friend.friend_wallet_address
+                            (p) =>
+                              p.participantId === friend.friend_wallet_address
                           );
+
+                        const isCurrentUser = friend.ID === "current_user";
 
                         return (
                           <button
                             key={friend.friend_wallet_address}
                             onClick={() => {
                               if (isAssigned) {
-                                removeFriendFromItem(selectedItem, friend.friend_wallet_address);
+                                removeFriendFromItem(
+                                  selectedItem,
+                                  friend.friend_wallet_address
+                                );
                               } else {
                                 assignFriendToItem(selectedItem, friend);
                               }
                             }}
                             className={`relative flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
                               isAssigned
-                                ? "bg-purple-600/20 border-purple-400/50 text-white shadow-lg shadow-purple-500/20"
+                                ? isCurrentUser
+                                  ? "bg-violet-600/20 border-violet-400/50 text-white shadow-lg shadow-violet-500/20"
+                                  : "bg-purple-600/20 border-purple-400/50 text-white shadow-lg shadow-purple-500/20"
+                                : isCurrentUser
+                                ? "bg-violet-500/10 border-violet-400/30 text-white hover:bg-violet-500/20 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-500/20"
                                 : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-white/10"
                             }`}
                             style={{
@@ -466,7 +544,13 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                               animation: "slideInUp 300ms ease-out forwards",
                             }}
                           >
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-fuchsia-400 rounded-full flex items-center justify-center mb-3 shadow-lg">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-lg ${
+                                isCurrentUser
+                                  ? "bg-gradient-to-br from-violet-400 to-purple-400"
+                                  : "bg-gradient-to-br from-purple-400 to-fuchsia-400"
+                              }`}
+                            >
                               <span className="text-white font-bold text-lg">
                                 {friend.nickname.charAt(0).toUpperCase()}
                               </span>
@@ -477,12 +561,20 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                                 {friend.nickname}
                               </div>
                               <div className="text-xs opacity-75 font-mono truncate w-full">
-                                {friend.friend_wallet_address}
+                                {isCurrentUser
+                                  ? "Your wallet"
+                                  : friend.friend_wallet_address}
                               </div>
                             </div>
 
                             {isAssigned && (
-                              <div className="absolute -top-2 -right-2 p-1.5 bg-purple-500 rounded-full shadow-lg">
+                              <div
+                                className={`absolute -top-2 -right-2 p-1.5 rounded-full shadow-lg ${
+                                  isCurrentUser
+                                    ? "bg-violet-500"
+                                    : "bg-purple-500"
+                                }`}
+                              >
                                 <Check className="w-4 h-4 text-white" />
                               </div>
                             )}

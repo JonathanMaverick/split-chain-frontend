@@ -5,8 +5,10 @@ import Participant from "../pages/Participant";
 import NewBill from "../pages/NewBill";
 import BillTest from "../pages/BillTest";
 import ViewBill from "../pages/ViewBill";
+import PaymentStatus from "../pages/PaymentStatus";
 import CreatedBills from "../pages/CreatedBills";
 import EditBill from "../pages/EditBill";
+import ParticipatedBills from "../pages/ParticipatedBills";
 
 export const RouteSetting: IRoute[] = [
   {
@@ -53,5 +55,15 @@ export const RouteSetting: IRoute[] = [
     name: "Edit Bill",
     path: "/edit-bill/:billId",
     element: <EditBill />,
+  },
+  {
+    name: "Payment Status",
+    path: "/payment-status/:billId",
+    element: <PaymentStatus />,
+  },
+  {
+    name: "Participated Bills",
+    path: "/participated-bills",
+    element: <ParticipatedBills />,
   },
 ];
