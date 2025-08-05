@@ -456,7 +456,7 @@ const PaymentStatus = () => {
 
             const transactions = Array.from(transactionIds)
               .map((txId) => {
-                const [accountPart, timestampPart] = txId.split("@");
+                const [_, timestampPart] = txId.split("@");
                 const timestamp = Number(timestampPart);
                 const date = new Date(Math.round(timestamp * 1000));
                 return {
@@ -474,7 +474,7 @@ const PaymentStatus = () => {
                   }),
                 };
               })
-              .sort((a, b) => b.timestamp - a.timestamp); // sort descending (newest first)
+              .sort((a, b) => b.timestamp - a.timestamp);
 
             return transactions.length > 0 ? (
               <div className="mb-10">
@@ -486,7 +486,7 @@ const PaymentStatus = () => {
                   {transactions.map(({ txId, formattedDate }, index) => (
                     <div
                       key={index}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl p-4 border border-white/10 bg-gradient-to-br from-purple-600/10 to-fuchsia-600/10 transition-shadow hover:shadow-lg hover:shadow-fuchsia-500/20"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl p-4 border border-white/10 bg-gradient-to-br from-purple-600/10 to-fuchsia-600/10 transition-shadow"
                     >
                       <div className="text-sm text-purple-200 break-words">
                         <div className="mb-1">
