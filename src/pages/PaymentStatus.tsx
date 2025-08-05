@@ -179,10 +179,10 @@ const PaymentStatus = () => {
     return participants;
   };
 
-  const sendTransaction = async(toAddress: string, amount: number) => {
+  const sendTransaction = async (toAddress: string, amount: number) => {
+    console.log("Sending transaction to:", toAddress, "Amount:", amount);
     await WalletService.sendTransaction(toAddress, amount);
-  }
-
+  };
 
   if (loading) {
     return (
@@ -438,8 +438,19 @@ const PaymentStatus = () => {
           {getPaymentStatus(accountId!) === "pending" && (
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => {
-                  // sendTransaction(accountId, totalWithTax )
+                onClick={async () => {
+                  const usdAmount = calculateFriendTotal(accountId!);
+                  const hbarAmount =
+                    Math.floor(usdAmount * HBAR_RATE * 100) / 100;
+                  const toAddress = bill.creatorId;
+
+                  try {
+                    await sendTransaction(toAddress, hbarAmount);
+                    window.location.reload();
+                  } catch (error) {
+                    alert("Payment failed. Please try again later.");
+                    console.error("Payment error:", error);
+                  }
                 }}
                 className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
               >

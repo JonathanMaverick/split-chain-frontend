@@ -431,7 +431,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
               onClick={handleContinueToPayment}
               className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             >
-              Continue to Payment
+              View Payment
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { LogOut, Plus, Receipt, Users, Zap } from "lucide-react";
+import { LogOut, Plus, Receipt, Users } from "lucide-react";
 import { useWallet } from "../contexts/WalletContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -76,6 +76,7 @@ export default function Navbar() {
                 src="https://rcxelnfhvbqszzccltry.supabase.co/storage/v1/object/sign/logo/SplitChain.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MDYxNWEyMi0yMDRlLTQzYzMtYjgwNy1lYTllZGI1YjgzMTMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJsb2dvL1NwbGl0Q2hhaW4ucG5nIiwiaWF0IjoxNzU0MzczNzA1LCJleHAiOjE4MTc0NDU3MDV9.3w7qGG5bAaOJS4b6aTUc_gR3HutrmWRoXIVIDrgoys0"
                 alt=""
               />
+              <div className="absolute inset-0 bg-fuchsia-400 blur-md opacity-50 animate-pulse"></div>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-purple-100 bg-clip-text text-transparent">
               Split Chain
