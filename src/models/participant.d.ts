@@ -1,5 +1,5 @@
 export interface Participant {
-  isPaid: boolean;
+  isPaid: string;
   amountOwed?: number;
   participantId: string;
 }

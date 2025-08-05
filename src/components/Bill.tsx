@@ -97,7 +97,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
       const participant: Participant = {
         participantId: friend.friend_wallet_address,
-        isPaid: false,
+        isPaid: "",
       };
 
       if (
@@ -161,9 +161,12 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   const grandTotal = subtotal + receipt.tax;
 
   const allParticipants = [currentUserFriend, ...friends];
+  console.log(friends);
   const filteredFriends = allParticipants.filter(
     (friend) =>
-      friend.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (friend.nickname?.toLowerCase() || "").includes(
+        searchQuery.toLowerCase()
+      ) ||
       friend.friend_wallet_address
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
@@ -560,7 +563,9 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                           >
                             <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-lg bg-gradient-to-br from-purple-400 to-fuchsia-400">
                               <span className="text-white font-bold text-lg">
-                                {friend.nickname.charAt(0).toUpperCase()}
+                                {friend.nickname
+                                  ? friend.nickname.charAt(0).toUpperCase()
+                                  : "-"}
                               </span>
                             </div>
 

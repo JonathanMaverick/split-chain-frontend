@@ -17,28 +17,28 @@ const PaymentStatus = () => {
   const [HBAR_RATE, setHBAR_RATE] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const fetchData = async () => {
+    if (!billId || !accountId) return;
+
+    try {
+      setLoading(true);
+
+      const billData = await BillService.getBillByBillId(billId);
+      setBill(billData);
+
+      const friendsData = await FriendService.getFriends(accountId);
+      setFriends(friendsData);
+
+      const rate = await UserService.getRate();
+      setHBAR_RATE(rate);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!billId || !accountId) return;
-
-      try {
-        setLoading(true);
-
-        const billData = await BillService.getBillByBillId(billId);
-        setBill(billData);
-
-        const friendsData = await FriendService.getFriends(accountId);
-        setFriends(friendsData);
-
-        const rate = await UserService.getRate();
-        setHBAR_RATE(rate);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, [billId, accountId]);
 
@@ -51,14 +51,9 @@ const PaymentStatus = () => {
         (p) => p.participantId === friendWalletAddress
       );
       if (participantInItem) {
-        const amountOwed = participantInItem.amountOwed;
-        if (amountOwed !== undefined) {
-          return total + amountOwed;
-        } else {
-          const itemPrice = item.price;
-          const portionPerParticipant = itemPrice / item.participants.length;
-          return total + portionPerParticipant;
-        }
+        const itemPrice = item.price;
+        const portionPerParticipant = itemPrice / item.participants.length;
+        return total + portionPerParticipant;
       }
       return total;
     }, 0);
@@ -82,7 +77,10 @@ const PaymentStatus = () => {
       const participantInItem = item.participants.find(
         (p) => p.participantId === friendWalletAddress
       );
-      return participantInItem && !participantInItem.isPaid;
+      return (
+        participantInItem &&
+        (!participantInItem.isPaid || participantInItem.isPaid === "")
+      );
     });
 
     return hasUnpaidItems ? "pending" : "paid";
@@ -179,9 +177,19 @@ const PaymentStatus = () => {
     return participants;
   };
 
-  const sendTransaction = async (toAddress: string, amount: number) => {
+  const sendTransaction = async (
+    toAddress: string,
+    amount: number
+  ): Promise<string> => {
     console.log("Sending transaction to:", toAddress, "Amount:", amount);
-    await WalletService.sendTransaction(toAddress, amount);
+    const transactionId = await WalletService.sendTransaction(
+      toAddress,
+      amount
+    );
+    if (!transactionId) {
+      throw new Error("Transaction failed");
+    }
+    return transactionId;
   };
 
   if (loading) {
@@ -435,6 +443,81 @@ const PaymentStatus = () => {
             </div>
           </div>
 
+          {(() => {
+            const transactionIds = new Set<string>();
+
+            bill.items.forEach((item) => {
+              item.participants?.forEach((participant) => {
+                if (participant.isPaid && participant.isPaid.trim() !== "") {
+                  transactionIds.add(participant.isPaid);
+                }
+              });
+            });
+
+            const transactions = Array.from(transactionIds)
+              .map((txId) => {
+                const [accountPart, timestampPart] = txId.split("@");
+                const timestamp = Number(timestampPart);
+                const date = new Date(Math.round(timestamp * 1000));
+                return {
+                  txId,
+                  date,
+                  timestamp,
+                  formattedDate: date.toLocaleString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  }),
+                };
+              })
+              .sort((a, b) => b.timestamp - a.timestamp); // sort descending (newest first)
+
+            return transactions.length > 0 ? (
+              <div className="mb-10">
+                <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  Payment History
+                </h4>
+
+                <div className="space-y-3">
+                  {transactions.map(({ txId, formattedDate }, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl p-4 border border-white/10 bg-gradient-to-br from-purple-600/10 to-fuchsia-600/10 transition-shadow hover:shadow-lg hover:shadow-fuchsia-500/20"
+                    >
+                      <div className="text-sm text-purple-200 break-words">
+                        <div className="mb-1">
+                          <span className="font-semibold text-white">
+                            Transaction ID:
+                          </span>{" "}
+                          <span className="text-purple-100">{txId}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-purple-300" />
+                          <span className="text-purple-100">
+                            {formattedDate}
+                          </span>
+                        </div>
+                      </div>
+
+                      <a
+                        href={`https://hashscan.io/testnet/transaction/${txId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 sm:mt-0 text-sm px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-semibold text-purple-300 transition-all duration-200 self-start sm:self-auto"
+                      >
+                        View
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null;
+          })()}
+
           {getPaymentStatus(accountId!) === "pending" && (
             <div className="flex gap-3 mt-6">
               <button
@@ -445,7 +528,30 @@ const PaymentStatus = () => {
                   const toAddress = bill.creatorId;
 
                   try {
-                    await sendTransaction(toAddress, hbarAmount);
+                    const transactionId = await sendTransaction(
+                      toAddress,
+                      hbarAmount
+                    );
+
+                    const updatedItems = bill.items.map((item) => {
+                      if (!item.participants) return item;
+
+                      const updatedParticipants = item.participants.map((p) => {
+                        if (p.participantId === accountId) {
+                          return { ...p, isPaid: transactionId };
+                        }
+                        return p;
+                      });
+
+                      return { ...item, participants: updatedParticipants };
+                    });
+
+                    setBill({ ...bill, items: updatedItems });
+
+                    await BillService.updateBill({
+                      ...bill,
+                      items: updatedItems,
+                    });
                     window.location.reload();
                   } catch (error) {
                     alert("Payment failed. Please try again later.");
