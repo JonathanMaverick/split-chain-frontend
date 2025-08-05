@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { FriendService } from "../services/friendService";
 import type { User } from "../models/user";
 import type { Friend } from "../models/friend";
@@ -10,7 +16,11 @@ interface FriendContextType {
   getFriends: (userWalletAddress: string) => Promise<Friend[]>;
   getPendingFriends: (userWalletAddress: string) => Promise<PendingFriend[]>;
   getPendingRequests: (userWalletAddress: string) => Promise<PendingFriend[]>;
-  addNickname: (userWalletAddress: string, friendWalletAddress: string, nickname: string) => Promise<string | null>;
+  addNickname: (
+    userWalletAddress: string,
+    friendWalletAddress: string,
+    nickname: string
+  ) => Promise<string | null>;
   acceptRequest: (id: string) => Promise<void>;
   declineRequest: (id: string) => Promise<void>;
   isLoading: boolean;
@@ -22,22 +32,24 @@ interface FriendContextType {
 }
 
 const FriendContext = createContext<FriendContextType>({
-    addFriend: async() => null,
-    getFriends: async() => [],
-    getPendingFriends: async() => [],
-    getPendingRequests: async() => [],
-    addNickname: async() => null,
-    acceptRequest: async() => {},
-    declineRequest: async() => {},
-    isLoading: false,
-    error: null,
-    refreshFriendsData: async() => {},
-    friends: [],
-    pendingFriends: [],
-    pendingRequests: []
+  addFriend: async () => null,
+  getFriends: async () => [],
+  getPendingFriends: async () => [],
+  getPendingRequests: async () => [],
+  addNickname: async () => null,
+  acceptRequest: async () => {},
+  declineRequest: async () => {},
+  isLoading: false,
+  error: null,
+  refreshFriendsData: async () => {},
+  friends: [],
+  pendingFriends: [],
+  pendingRequests: [],
 });
 
-export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({children,}) => {
+export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { accountId } = useWallet();
@@ -68,21 +80,23 @@ export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({childre
       await Promise.all([
         fetchFriends(),
         fetchPendingFriends(),
-        fetchPendingRequests()
+        fetchPendingRequests(),
       ]);
     } catch (err) {
       console.error("Error fetching friend data", err);
     } finally {
       setIsLoading(false);
     }
-
   }, [accountId]);
 
   useEffect(() => {
     refreshFriendsData();
   }, [refreshFriendsData]);
 
-  const addFriend = async (currUser: User, friend: User): Promise<string | null> => {
+  const addFriend = async (
+    currUser: User,
+    friend: User
+  ): Promise<string | null> => {
     setError(null);
     try {
       await FriendService.addFriend(currUser, friend);
@@ -100,33 +114,45 @@ export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({childre
     } catch (err: any) {
       setError(err.message);
       return [];
-    } 
+    }
   };
 
-  const getPendingFriends = async (userWalletAddress: string): Promise<PendingFriend[]> => {
+  const getPendingFriends = async (
+    userWalletAddress: string
+  ): Promise<PendingFriend[]> => {
     setError(null);
     try {
       return await FriendService.getPendingFriends(userWalletAddress);
     } catch (err: any) {
       setError(err.message);
       return [];
-    } 
+    }
   };
 
-  const getPendingRequests = async (userWalletAddress: string): Promise<PendingFriend[]> => {
+  const getPendingRequests = async (
+    userWalletAddress: string
+  ): Promise<PendingFriend[]> => {
     setError(null);
     try {
       return await FriendService.getPendingRequests(userWalletAddress);
     } catch (err: any) {
       setError(err.message);
       return [];
-    } 
+    }
   };
 
-  const addNickname = async (userWalletAddress: string, friendWalletAddress: string, nickname: string): Promise<string | null> => {
+  const addNickname = async (
+    userWalletAddress: string,
+    friendWalletAddress: string,
+    nickname: string
+  ): Promise<string | null> => {
     setError(null);
     try {
-      await FriendService.addNickname(userWalletAddress, friendWalletAddress, nickname);
+      await FriendService.addNickname(
+        userWalletAddress,
+        friendWalletAddress,
+        nickname
+      );
       return null;
     } catch (err: any) {
       setError(err.message);
@@ -157,7 +183,23 @@ export const FriendProvider: React.FC<{ children: React.ReactNode }> = ({childre
   };
 
   return (
-    <FriendContext.Provider value={{ addFriend, getFriends, getPendingFriends, getPendingRequests, addNickname, acceptRequest, declineRequest, isLoading, error, refreshFriendsData, friends, pendingFriends, pendingRequests }}>
+    <FriendContext.Provider
+      value={{
+        addFriend,
+        getFriends,
+        getPendingFriends,
+        getPendingRequests,
+        addNickname,
+        acceptRequest,
+        declineRequest,
+        isLoading,
+        error,
+        refreshFriendsData,
+        friends,
+        pendingFriends,
+        pendingRequests,
+      }}
+    >
       {children}
     </FriendContext.Provider>
   );

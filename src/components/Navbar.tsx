@@ -1,6 +1,7 @@
 import { LogOut, Plus, Receipt, Users } from "lucide-react";
 import { useWallet } from "../contexts/WalletContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import InboxBell from "./InboxBell";
 
 export default function Navbar() {
   const { balance, disconnectWallet, isAuthLoading } = useWallet();
@@ -159,6 +160,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center space-x-4">
+          <InboxBell />
           <div className="hidden md:block text-right cursor-default">
             <div className="text-sm text-purple-200">Balance</div>
             <div className="font-semibold text-fuchsia-400 flex items-center">

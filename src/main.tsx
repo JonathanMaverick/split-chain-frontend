@@ -5,15 +5,18 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import { WalletProvider } from "./contexts/WalletContext.tsx";
 import { FriendProvider } from "./contexts/FriendContext.tsx";
+import { SocketProvider } from "./contexts/SocketContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-        <WalletProvider>
-          <FriendProvider>
+      <WalletProvider>
+        <FriendProvider>
+          <SocketProvider>
             <App />
-          </FriendProvider>
-        </WalletProvider>
+          </SocketProvider>
+        </FriendProvider>
+      </WalletProvider>
     </BrowserRouter>
   </StrictMode>
 );
