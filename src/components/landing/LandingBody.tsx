@@ -39,7 +39,6 @@ function LandingBody() {
   };
 
   const transfer = async () => {
-    WalletService.sendTransaction();
     WalletService.checkBalance().then((res) => setBalance(res));
   };
 

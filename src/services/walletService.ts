@@ -12,10 +12,10 @@ import {
 } from "hashconnect";
 
 const appMetadata = {
-  name: "ChainLink",
-  description: "ChainLink description here",
+  name: "SplitChain",
+  description: "Your Split Bills With Crypto",
   icons: [
-    "https://avatars.githubusercontent.com/u/114144117?s=400&u=b43effb8c13cfb3971f5dd9f1b10bebbf1e9711c&v=4",
+    "https://rcxelnfhvbqszzccltry.supabase.co/storage/v1/object/sign/logo/SplitChain.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV81MDYxNWEyMi0yMDRlLTQzYzMtYjgwNy1lYTllZGI1YjgzMTMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJsb2dvL1NwbGl0Q2hhaW4ucG5nIiwiaWF0IjoxNzU0MzczNzA1LCJleHAiOjE4MTc0NDU3MDV9.3w7qGG5bAaOJS4b6aTUc_gR3HutrmWRoXIVIDrgoys0",
   ],
   url: "http://localhost:5173/",
 };
@@ -75,16 +75,15 @@ export const WalletService = {
     return state === HashConnectConnectionState.Paired && pairingData !== null;
   },
 
-  async sendTransaction() {
+  async sendTransaction(toAddress: string, amount: number) {
     const accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
       const accountId = AccountId.fromString(accountIdStr);
       const signer = hashconnect.getSigner(accountId);
 
-      //TODO: Using backend to create a transaction (Optional)
       const transaction = await new TransferTransaction()
-        .addHbarTransfer(accountId, -1)
-        .addHbarTransfer("0.0.6331448", 1)
+        .addHbarTransfer(accountId, amount)
+        .addHbarTransfer(toAddress, amount)
         .freezeWithSigner(signer);
 
       const response = await transaction.executeWithSigner(signer);

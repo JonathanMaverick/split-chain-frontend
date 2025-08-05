@@ -7,6 +7,7 @@ import { useWallet } from "../contexts/WalletContext";
 import type { Receipt } from "../models/receipt";
 import type { Friend } from "../models/friend";
 import { FriendService } from "../services/friendService";
+import { WalletService } from "../services/walletService";
 
 const PaymentStatus = () => {
   const { billId } = useParams<{ billId: string }>();
@@ -177,6 +178,11 @@ const PaymentStatus = () => {
 
     return participants;
   };
+
+  const sendTransaction = async(toAddress: string, amount: number) => {
+    await WalletService.sendTransaction(toAddress, amount);
+  }
+
 
   if (loading) {
     return (
@@ -433,7 +439,7 @@ const PaymentStatus = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => {
-                  console.log("Pay button clicked");
+                  // sendTransaction(accountId, totalWithTax )
                 }}
                 className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
               >
