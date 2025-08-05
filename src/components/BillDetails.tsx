@@ -312,9 +312,9 @@ const BillDetails: React.FC<BillDetailsProps> = ({
                         <div className="text-white font-semibold text-lg">
                           {item.name}
                         </div>
-                        <div className="text-purple-200 text-sm">
+                        {/* <div className="text-purple-200 text-sm">
                           ${item.price.toFixed(2)} each
-                        </div>
+                        </div> */}
                       </div>
 
                       <div className="text-right">

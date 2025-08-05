@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Edit,
   Trash2,
+  Users,
 } from "lucide-react";
 import { BillService } from "../services/billService";
 import { useNavigate } from "react-router-dom";
@@ -31,36 +32,33 @@ export default function CreatedBills() {
       try {
         setLoading(true);
         setError(null);
-        const billsData = await BillService.getBillsByCurrentCreator();
-        
-        // Sort bills by createdAt (newest first)
+        const billsData = (await BillService.getBillsByCurrentCreator()) ?? [];
+
         const sortedBills = billsData.sort((a, b) => {
           const dateA = new Date(a.createdAt || a.billDate);
           const dateB = new Date(b.createdAt || b.billDate);
           return dateB.getTime() - dateA.getTime();
         });
-        
+
         setBills(sortedBills);
-        
-        // Group bills by date
+
         const grouped = sortedBills.reduce((acc, bill) => {
           const date = new Date(bill.createdAt || bill.billDate);
-          const dateKey = date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+          const dateKey = date.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           });
-          
+
           if (!acc[dateKey]) {
             acc[dateKey] = [];
           }
           acc[dateKey].push(bill);
           return acc;
         }, {} as GroupedBills);
-        
+
         setGroupedBills(grouped);
-        console.log("fff:", billsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch bills");
       } finally {
@@ -81,8 +79,8 @@ export default function CreatedBills() {
   };
 
   const handleBillClick = (billId: string) => {
-    navigate(`/view-bill/${billId}`);
-    console.log("Navigate to bill detail:", billId);
+    navigate(`/payment-status/${billId}`);
+    console.log("Navigate to payment status:", billId);
   };
 
   const handleEditBill = (e: React.MouseEvent, billId: string) => {
@@ -103,19 +101,16 @@ export default function CreatedBills() {
         setDeletingBillId(billId);
         await BillService.deleteBill(billId);
 
-        // Remove the deleted bill from the state
         setBills((prevBills) =>
           prevBills.filter((bill) => bill.billId !== billId)
         );
 
-        // Update grouped bills
         setGroupedBills((prevGrouped) => {
           const newGrouped = { ...prevGrouped };
-          Object.keys(newGrouped).forEach(dateKey => {
+          Object.keys(newGrouped).forEach((dateKey) => {
             newGrouped[dateKey] = newGrouped[dateKey].filter(
               (bill) => bill.billId !== billId
             );
-            // Remove empty date groups
             if (newGrouped[dateKey].length === 0) {
               delete newGrouped[dateKey];
             }
@@ -131,6 +126,12 @@ export default function CreatedBills() {
         setDeletingBillId(null);
       }
     }
+  };
+
+  const handleAssignParticipants = (e: React.MouseEvent, billId: string) => {
+    e.stopPropagation();
+    navigate(`/assign-participants/${billId}`);
+    console.log("Navigate to assign participants:", billId);
   };
 
   if (loading) {
@@ -209,7 +210,7 @@ export default function CreatedBills() {
                   </h2>
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent"></div>
                 </div>
-                
+
                 <div className="space-y-4">
                   {billsForDate.map((bill, index) => {
                     const totalAmount = calculateTotalAmount(bill);
@@ -233,14 +234,13 @@ export default function CreatedBills() {
                                   <div className="flex items-center gap-1">
                                     <Calendar className="w-4 h-4" />
                                     <span>
-                                      {new Date(bill.billDate).toLocaleDateString(
-                                        "en-US",
-                                        {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                        }
-                                      )}
+                                      {new Date(
+                                        bill.billDate
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
@@ -257,20 +257,36 @@ export default function CreatedBills() {
                                   <DollarSign className="w-5 h-5 text-purple-300 translate-y-0.5" />
                                   {formatCurrency(totalAmount)}
                                 </div>
-                                <div className="text-purple-200 text-sm">Total</div>
+                                <div className="text-purple-200 text-sm">
+                                  Total
+                                </div>
                               </div>
 
                               <div className="flex items-center gap-2 ml-2">
                                 <button
-                                  onClick={(e) => handleEditBill(e, bill.billId!)}
-                                  className="p-2 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 hover:text-purple-200 transition-all duration-200 border border-white/10 hover:border-white/30"
+                                  onClick={(e) =>
+                                    handleEditBill(e, bill.billId!)
+                                  }
+                                  className="p-2 rounded-lg bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-purple-100 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/50"
                                   title="Edit Bill"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
 
                                 <button
-                                  onClick={(e) => handleDeleteBill(e, bill.billId!)}
+                                  onClick={(e) =>
+                                    handleAssignParticipants(e, bill.billId!)
+                                  }
+                                  className="p-2 rounded-lg bg-gradient-to-r from-fuchsia-500/30 to-purple-500/30 text-white hover:from-fuchsia-500/40 hover:to-purple-500/40 transition-all duration-200 border border-fuchsia-400/40 hover:border-fuchsia-400/60 shadow-lg hover:shadow-xl"
+                                  title="Assign Participants"
+                                >
+                                  <Users className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={(e) =>
+                                    handleDeleteBill(e, bill.billId!)
+                                  }
                                   disabled={deletingBillId === bill.billId}
                                   className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 transition-all duration-200 border border-red-500/20 hover:border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                   title="Delete Bill"

@@ -131,25 +131,35 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
   };
 
   const calculateFriendTotal = (friendWalletAddress: string) => {
-    return receiptItems.reduce((total, item) => {
-      if (!item.participants) return total;
-      const participantInItem = item.participants.find(
+    let subtotalPortion = 0;
+
+    for (const item of receiptItems) {
+      if (!item.participants) continue;
+
+      const isParticipant = item.participants.find(
         (p) => p.participantId === friendWalletAddress
       );
-      if (participantInItem) {
-        const itemPrice = item.price;
-        const portionPerParticipant = itemPrice / item.participants.length;
-        return total + portionPerParticipant;
+
+      if (isParticipant) {
+        const portionPerParticipant = item.price / item.participants.length;
+        subtotalPortion += portionPerParticipant;
       }
-      return total;
-    }, 0);
+    }
+
+    const totalSubtotal = receiptItems.reduce(
+      (sum, item) => sum + item.price,
+      0
+    );
+    const taxPortion =
+      totalSubtotal > 0 ? (subtotalPortion / totalSubtotal) * receipt.tax : 0;
+
+    return subtotalPortion + taxPortion;
   };
 
   const subtotal = receipt.items.reduce((sum, item) => sum + item.price, 0);
 
   const grandTotal = subtotal + receipt.tax;
 
-  // Combine friends with current user and filter
   const allParticipants = [currentUserFriend, ...friends];
   const filteredFriends = allParticipants.filter(
     (friend) =>
@@ -179,8 +189,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
       await BillService.updateBill(updatedReceipt);
 
       onSave?.(updatedReceipt);
-      
-      // Navigate to payment status page
+
       navigate(`/payment-status/${receipt.billId}`);
     } catch (error) {
       console.error("Failed to update bill:", error);
@@ -265,6 +274,13 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                             assignedParticipants.length
                           : 0;
 
+                        const itemTaxPortion =
+                          (itemWithParticipants.price / subtotal) * receipt.tax;
+
+                        const taxPerParticipant =
+                          itemTaxPortion / assignedParticipants.length;
+                        const totalWithTax = portion + taxPerParticipant;
+
                         const correspondingFriend = allParticipants.find(
                           (f) =>
                             f.friend_wallet_address ===
@@ -279,7 +295,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                             key={participant.participantId}
                             className={`flex items-center justify-between rounded-lg p-3 animate-in slide-in-from-left duration-200 ${
                               isCurrentUser
-                                ? "bg-violet-500/10 border border-violet-400/30"
+                                ? "bg-fuchsia-600/20 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/20"
                                 : "bg-white/10"
                             }`}
                           >
@@ -287,7 +303,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                               <span
                                 className={`font-medium ${
                                   isCurrentUser
-                                    ? "text-violet-200"
+                                    ? "text-fuchsia-100"
                                     : "text-white"
                                 }`}
                               >
@@ -297,12 +313,14 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                               <span
                                 className={`text-sm ml-2 ${
                                   isCurrentUser
-                                    ? "text-violet-300"
+                                    ? "text-fuchsia-200"
                                     : "text-purple-200"
                                 }`}
                               >
-                                ${portion.toFixed(2)} (
-                                {(portion * HBAR_RATE).toFixed(2)} ℏ)
+                                ${totalWithTax.toFixed(2)} ($
+                                {portion.toFixed(2)} + Fees $
+                                {taxPerParticipant.toFixed(2)}) (
+                                {(totalWithTax * HBAR_RATE).toFixed(2)} ℏ)
                               </span>
                             </div>
                             <button
@@ -314,7 +332,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                               }
                               className={`p-1 rounded cursor-pointer ${
                                 isCurrentUser
-                                  ? "text-violet-200 hover:bg-violet-500/20"
+                                  ? "text-fuchsia-100 hover:bg-fuchsia-600/30"
                                   : "text-white hover:bg-white/20"
                               }`}
                             >
@@ -355,14 +373,14 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                   >
                     <span
                       className={`font-semibold ${
-                        isCurrentUser ? "text-violet-200" : "text-purple-200"
+                        isCurrentUser ? "text-fuchsia-100" : "text-purple-200"
                       }`}
                     >
                       {friend.nickname}
                     </span>
                     <span
                       className={`font-semibold ${
-                        isCurrentUser ? "text-violet-200" : "text-purple-200"
+                        isCurrentUser ? "text-fuchsia-100" : "text-purple-200"
                       }`}
                     >
                       ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)} ℏ)
@@ -532,11 +550,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                             }}
                             className={`relative flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
                               isAssigned
-                                ? isCurrentUser
-                                  ? "bg-violet-600/20 border-violet-400/50 text-white shadow-lg shadow-violet-500/20"
-                                  : "bg-purple-600/20 border-purple-400/50 text-white shadow-lg shadow-purple-500/20"
-                                : isCurrentUser
-                                ? "bg-violet-500/10 border-violet-400/30 text-white hover:bg-violet-500/20 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-500/20"
+                                ? "bg-purple-600/20 border-purple-400/50 text-white shadow-lg shadow-purple-500/20"
                                 : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-white/10"
                             }`}
                             style={{
@@ -544,13 +558,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                               animation: "slideInUp 300ms ease-out forwards",
                             }}
                           >
-                            <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-lg ${
-                                isCurrentUser
-                                  ? "bg-gradient-to-br from-violet-400 to-purple-400"
-                                  : "bg-gradient-to-br from-purple-400 to-fuchsia-400"
-                              }`}
-                            >
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-lg bg-gradient-to-br from-purple-400 to-fuchsia-400">
                               <span className="text-white font-bold text-lg">
                                 {friend.nickname.charAt(0).toUpperCase()}
                               </span>
@@ -569,10 +577,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
 
                             {isAssigned && (
                               <div
-                                className={`absolute -top-2 -right-2 p-1.5 rounded-full shadow-lg ${
-                                  isCurrentUser
-                                    ? "bg-violet-500"
-                                    : "bg-purple-500"
+                                className={`absolute -top-2 -right-2 p-1.5 rounded-full shadow-lg bg-purple-500
                                 }`}
                               >
                                 <Check className="w-4 h-4 text-white" />

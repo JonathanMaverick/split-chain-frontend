@@ -3,12 +3,11 @@ import Friends from "../pages/Friends";
 import History from "../pages/History";
 import Participant from "../pages/Participant";
 import NewBill from "../pages/NewBill";
-import BillTest from "../pages/BillTest";
-import ViewBill from "../pages/ViewBill";
 import PaymentStatus from "../pages/PaymentStatus";
 import CreatedBills from "../pages/CreatedBills";
 import EditBill from "../pages/EditBill";
 import ParticipatedBills from "../pages/ParticipatedBills";
+import AssignParticipants from "../pages/ViewBill";
 
 export const RouteSetting: IRoute[] = [
   {
@@ -32,11 +31,6 @@ export const RouteSetting: IRoute[] = [
     element: <History />,
   },
   {
-    name: "Bill-Test",
-    path: "/bill",
-    element: <BillTest />,
-  },
-  {
     name: "Created Bills",
     path: "/created-bills",
     element: <CreatedBills />,
@@ -47,9 +41,9 @@ export const RouteSetting: IRoute[] = [
     element: <Participant />,
   },
   {
-    name: "View Bill",
-    path: "/view-bill/:billId",
-    element: <ViewBill />,
+    name: "Assign Participants",
+    path: "/assign-participants/:billId",
+    element: <AssignParticipants />,
   },
   {
     name: "Edit Bill",

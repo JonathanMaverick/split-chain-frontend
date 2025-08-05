@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Clock, DollarSign, Users } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { CheckCircle, Clock, Users, FileText } from "lucide-react";
 import { BillService } from "../services/billService";
 import { UserService } from "../services/userService";
 import { useWallet } from "../contexts/WalletContext";
@@ -10,7 +10,6 @@ import { FriendService } from "../services/friendService";
 
 const PaymentStatus = () => {
   const { billId } = useParams<{ billId: string }>();
-  const navigate = useNavigate();
   const { accountId } = useWallet();
   const [bill, setBill] = useState<Receipt | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -20,19 +19,16 @@ const PaymentStatus = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!billId || !accountId) return;
-      
+
       try {
         setLoading(true);
-        
-        // Fetch bill data
+
         const billData = await BillService.getBillByBillId(billId);
         setBill(billData);
-        
-        // Fetch friends
+
         const friendsData = await FriendService.getFriends(accountId);
         setFriends(friendsData);
-        
-        // Fetch HBAR rate
+
         const rate = await UserService.getRate();
         setHBAR_RATE(rate);
       } catch (error) {
@@ -45,36 +41,50 @@ const PaymentStatus = () => {
     fetchData();
   }, [billId, accountId]);
 
-  const currentUserFriend: Friend = {
-    ID: "current_user",
-    friend_wallet_address: accountId || "",
-    nickname: "You",
-  };
-
-  const allParticipants = [currentUserFriend, ...friends];
-
   const calculateFriendTotal = (friendWalletAddress: string) => {
     if (!bill) return 0;
-    
-    return bill.items.reduce((total, item) => {
+
+    const subtotal = bill.items.reduce((total, item) => {
       if (!item.participants) return total;
       const participantInItem = item.participants.find(
         (p) => p.participantId === friendWalletAddress
       );
       if (participantInItem) {
-        const itemPrice = item.price;
-        const portionPerParticipant = itemPrice / item.participants.length;
-        return total + portionPerParticipant;
+        const amountOwed = participantInItem.amountOwed;
+        if (amountOwed !== undefined) {
+          return total + amountOwed;
+        } else {
+          const itemPrice = item.price;
+          const portionPerParticipant = itemPrice / item.participants.length;
+          return total + portionPerParticipant;
+        }
       }
       return total;
     }, 0);
+
+    const totalSubtotal = bill.items.reduce((sum, item) => sum + item.price, 0);
+    const taxPortion =
+      totalSubtotal > 0 ? (subtotal / totalSubtotal) * bill.tax : 0;
+
+    return subtotal + taxPortion;
   };
 
   const getPaymentStatus = (friendWalletAddress: string) => {
-    // This would be replaced with actual payment status logic
-    // For now, returning mock data
-    const isCurrentUser = friendWalletAddress === accountId;
-    return isCurrentUser ? "paid" : "pending";
+    if (!bill) return "pending";
+
+    if (friendWalletAddress === bill.creatorId) {
+      return "paid";
+    }
+
+    const hasUnpaidItems = bill.items.some((item) => {
+      if (!item.participants) return false;
+      const participantInItem = item.participants.find(
+        (p) => p.participantId === friendWalletAddress
+      );
+      return participantInItem && !participantInItem.isPaid;
+    });
+
+    return hasUnpaidItems ? "pending" : "paid";
   };
 
   const getStatusIcon = (status: string) => {
@@ -97,6 +107,75 @@ const PaymentStatus = () => {
       default:
         return "bg-gray-500/20 text-gray-300 border-gray-400/30";
     }
+  };
+
+  const getParticipantDisplayName = (participantId: string) => {
+    if (!participantId) {
+      console.log("getParticipantDisplayName: participantId is empty");
+      return "Unknown";
+    }
+
+    if (participantId === accountId) {
+      console.log(
+        "getParticipantDisplayName: returning 'You' for",
+        participantId
+      );
+      return "You";
+    }
+
+    const friend = friends.find(
+      (f) => f.friend_wallet_address === participantId
+    );
+    if (friend) {
+      console.log(
+        "getParticipantDisplayName: found friend",
+        friend.nickname,
+        "for",
+        participantId
+      );
+      return friend.nickname;
+    }
+
+    console.log(
+      "getParticipantDisplayName: returning 'Anonymous' for",
+      participantId
+    );
+    return "Anonymous";
+  };
+
+  const getAllBillParticipants = () => {
+    if (!bill) return [];
+
+    const participantIds = new Set<string>();
+
+    if (accountId) {
+      participantIds.add(accountId);
+    }
+
+    bill.items.forEach((item) => {
+      if (item.participants) {
+        item.participants.forEach((participant) => {
+          if (participant.participantId) {
+            participantIds.add(participant.participantId);
+          }
+        });
+      }
+    });
+
+    const participants = Array.from(participantIds).map((participantId) => {
+      const displayName = getParticipantDisplayName(participantId);
+      return {
+        participantId,
+        displayName,
+        isCurrentUser: participantId === accountId,
+      };
+    });
+
+    console.log("All participants:", participants);
+    console.log("Friends:", friends);
+    console.log("Account ID:", accountId);
+
+    return participants;
   };
 
   if (loading) {
@@ -130,23 +209,23 @@ const PaymentStatus = () => {
   return (
     <div className="max-w-2xl w-full mx-auto -mt-4">
       <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Header */}
         <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-6 py-4 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate(-1)}
-                className="p-2 bg-white/10 rounded-lg text-purple-300 hover:bg-white/20 hover:text-purple-200 transition-all duration-200"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
               <div>
                 <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                  <DollarSign className="w-6 h-6 text-purple-300" />
-                  Payment Status
+                  <div className="p-2 bg-white/10 rounded-lg">
+                    <FileText className="w-6 h-6 text-purple-300" />
+                  </div>
+                  {bill.storeName}
                 </h3>
-                <p className="text-purple-200 text-sm">
-                  {bill.storeName} • {new Date(bill.billDate).toLocaleDateString()}
+                <p className="text-purple-200 text-sm ml-[3.35rem]">
+                  {bill.items.length} items •{" "}
+                  {new Date(bill.billDate).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </p>
               </div>
             </div>
@@ -154,52 +233,58 @@ const PaymentStatus = () => {
         </div>
 
         <div className="p-6">
-          {/* Payment Summary */}
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-6">
+          <div className="space-y-4 mb-8">
             <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Users className="w-5 h-5 text-purple-300" />
               Payment Summary
             </h4>
 
-            <div className="space-y-3">
-              {allParticipants.map((friend) => {
-                const total = calculateFriendTotal(friend.friend_wallet_address);
-                if (total === 0) return null;
+            {getAllBillParticipants().map((participant) => {
+              const total = calculateFriendTotal(participant.participantId);
+              if (total === 0) return null;
 
-                const status = getPaymentStatus(friend.friend_wallet_address);
-                const isCurrentUser = friend.ID === "current_user";
+              const status = getPaymentStatus(participant.participantId);
 
-                return (
-                  <div
-                    key={friend.friend_wallet_address}
-                    className={`flex items-center justify-between p-4 rounded-lg border ${
-                      isCurrentUser
-                        ? "bg-violet-500/10 border-violet-400/30"
-                        : "bg-white/5 border-white/10"
-                    }`}
-                  >
+              return (
+                <div
+                  key={participant.participantId}
+                  className={`rounded-xl p-4 border ${
+                    participant.isCurrentUser
+                      ? "bg-fuchsia-600/20 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/20"
+                      : "bg-white/5 border-white/5"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          isCurrentUser
-                            ? "bg-gradient-to-br from-violet-400 to-purple-400"
-                            : "bg-gradient-to-br from-purple-400 to-fuchsia-400"
+                        className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-400
                         }`}
                       >
                         <span className="text-white font-bold">
-                          {friend.nickname.charAt(0).toUpperCase()}
+                          {(participant.displayName || "A")
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       </div>
                       <div>
                         <div
-                          className={`font-semibold ${
-                            isCurrentUser ? "text-violet-200" : "text-white"
+                          className={`font-semibold text-lg ${
+                            participant.isCurrentUser
+                              ? "text-violet-200"
+                              : "text-white"
                           }`}
                         >
-                          {friend.nickname}
+                          {participant.displayName || "Anonymous"}
                         </div>
-                        <div className="text-sm text-purple-200">
-                          ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)} ℏ)
+                        <div
+                          className={`text-sm ${
+                            participant.isCurrentUser
+                              ? "text-violet-300"
+                              : "text-purple-200"
+                          }`}
+                        >
+                          ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)}{" "}
+                          ℏ)
                         </div>
                       </div>
                     </div>
@@ -215,78 +300,151 @@ const PaymentStatus = () => {
                       {getStatusIcon(status)}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Bill Details */}
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10 mb-6">
-            <h4 className="text-lg font-semibold text-white mb-4">Bill Details</h4>
+          <div className="mb-6">
+            <h4 className="text-lg font-semibold text-white mb-4">
+              Bill Details
+            </h4>
 
-            <div className="space-y-2 mb-4">
+            <div className="space-y-4">
               {bill.items.map((item, index) => (
                 <div
                   key={index}
-                  className="flex justify-between items-center text-sm"
+                  className="bg-white/5 rounded-xl p-4 border border-white/5"
                 >
-                  <span className="text-purple-200">
-                    {item.name} × {item.quantity}
-                  </span>
-                  <span className="text-white font-medium">
-                    ${item.price.toFixed(2)}
-                  </span>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h5 className="text-white font-semibold text-lg">
+                        {item.name}
+                      </h5>
+                      <p className="text-purple-200 text-sm">
+                        {item.quantity}× $
+                        {(item.price / item.quantity).toFixed(2)} = $
+                        {item.price.toFixed(2)} (
+                        {(item.price * HBAR_RATE).toFixed(2)} ℏ)
+                      </p>
+                    </div>
+                  </div>
+
+                  {item.participants && item.participants.length > 0 ? (
+                    <div className="space-y-2">
+                      {item.participants.map((participant, pIndex) => {
+                        const portion = item.price / item.participants.length;
+                        const displayName = getParticipantDisplayName(
+                          participant.participantId
+                        );
+                        const isCurrentUser =
+                          participant.participantId === accountId;
+                        const itemTax = (item.price / subtotal) * bill.tax;
+                        const taxPerPerson = itemTax / item.participants.length;
+                        const totalWithTax = portion + taxPerPerson;
+
+                        return (
+                          <div
+                            key={pIndex}
+                            className={`flex items-center justify-between rounded-lg p-3 ${
+                              isCurrentUser
+                                ? "bg-fuchsia-600/20 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/20"
+                                : "bg-white/10"
+                            }`}
+                          >
+                            <div>
+                              <span
+                                className={`font-medium ${
+                                  isCurrentUser
+                                    ? "text-violet-200"
+                                    : "text-white"
+                                }`}
+                              >
+                                {displayName || "Anonymous"}
+                              </span>
+                              <span
+                                className={`text-sm ml-2 ${
+                                  isCurrentUser
+                                    ? "text-violet-300"
+                                    : "text-purple-200"
+                                }`}
+                              >
+                                ${totalWithTax.toFixed(2)} ( $
+                                {portion.toFixed(2)} + Fees $
+                                {taxPerPerson.toFixed(2)}) (
+                                {(totalWithTax * HBAR_RATE).toFixed(2)} ℏ)
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(
+                                getPaymentStatus(participant.participantId)
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-3 border-2 border-dashed border-white/20 rounded-lg">
+                      <p className="text-white/60 text-sm">
+                        No participants assigned
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
-            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-white">
-                <span className="font-semibold">Subtotal</span>
-                <span className="font-semibold">
-                  ${subtotal.toFixed(2)} ({(subtotal * HBAR_RATE).toFixed(2)} ℏ)
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center text-purple-200">
-                <span className="font-semibold">Tax & Fees</span>
-                <span className="font-semibold">
-                  ${bill.tax.toFixed(2)} ({(bill.tax * HBAR_RATE).toFixed(2)} ℏ)
-                </span>
-              </div>
-
+            <div className="mt-6">
               <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-white">
+                  <span className="font-semibold text-lg">Subtotal</span>
+                  <span className="font-semibold text-lg">
+                    ${subtotal.toFixed(2)} ({(subtotal * HBAR_RATE).toFixed(2)}{" "}
+                    ℏ)
+                  </span>
+                </div>
 
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-lg text-white">Total</span>
-                <span className="font-semibold text-lg text-white">
-                  ${grandTotal.toFixed(2)} ({(grandTotal * HBAR_RATE).toFixed(2)} ℏ)
-                </span>
+                <div className="flex justify-between items-center text-purple-200">
+                  <span className="font-semibold text-lg">Tax & Fees</span>
+                  <span className="font-semibold text-lg">
+                    ${bill.tax.toFixed(2)} ({(bill.tax * HBAR_RATE).toFixed(2)}{" "}
+                    ℏ)
+                  </span>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
+
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-lg text-white">
+                    Total
+                  </span>
+                  <span className="font-semibold text-lg text-white">
+                    ${grandTotal.toFixed(2)} (
+                    {(grandTotal * HBAR_RATE).toFixed(2)} ℏ)
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate(`/view-bill/${billId}`)}
-              className="flex-1 px-6 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 rounded-xl font-semibold text-white transition-all duration-300"
-            >
-              Back to Bill
-            </button>
-            <button
-              onClick={() => navigate("/history")}
-              className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              View History
-            </button>
-          </div>
+          {getPaymentStatus(accountId!) === "pending" && (
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  console.log("Pay button clicked");
+                }}
+                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+              >
+                Pay Now
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default PaymentStatus; 
+export default PaymentStatus;

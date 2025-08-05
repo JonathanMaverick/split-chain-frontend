@@ -16,7 +16,7 @@ export default function Navbar() {
       return "friends";
     if (
       location.pathname === "/created-bills" ||
-      location.pathname === "/view-bill/:billId"
+      location.pathname === "/assign-participants/:billId"
     )
       return "created-bills";
     if (location.pathname === "/participated-bills")
@@ -147,7 +147,9 @@ export default function Navbar() {
               <span>Participated Bills</span>
               <div
                 className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-fuchsia-400 to-purple-400 transition-all duration-300 ${
-                  activeTab === "participated-bills" ? "w-full" : "w-0 group-hover:w-full"
+                  activeTab === "participated-bills"
+                    ? "w-full"
+                    : "w-0 group-hover:w-full"
                 }`}
               ></div>
             </button>

@@ -4,7 +4,7 @@ import Bill from "../components/Bill";
 import { BillService } from "../services/billService";
 import type { Receipt } from "../models/receipt";
 
-const ViewBill = () => {
+const AssignParticipants = () => {
   const { billId } = useParams<{ billId: string }>();
   const [bill, setBill] = useState<Receipt | null>(null);
 
@@ -23,4 +23,4 @@ const ViewBill = () => {
   return <div>{bill && <Bill receipt={bill} />}</div>;
 };
 
-export default ViewBill;
+export default AssignParticipants;
