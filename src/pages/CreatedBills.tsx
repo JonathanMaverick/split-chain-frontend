@@ -135,8 +135,12 @@ export default function CreatedBills() {
   };
 
   const hasAnyPaidParticipant = (bill: Receipt): boolean => {
-    return bill.items.some((item) =>
-      item.participants.some((participant) => participant.isPaid?.trim() !== "")
+    return (
+      bill.items?.some((item) =>
+        item.participants?.some(
+          (participant) => participant?.isPaid?.trim() !== ""
+        )
+      ) ?? false
     );
   };
 
