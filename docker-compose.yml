@@ -1,0 +1,7 @@
+services:
+  portofolio:
+    build: .
+    image: split_chain_fe
+    container_name: 'split_chain_fe'
+    ports:
+      - 3000:3000
