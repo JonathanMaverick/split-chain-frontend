@@ -35,6 +35,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isLoggedIn && location.pathname === "/") {
+      navigate("/new-bill");
+    }
+  }, [isLoggedIn, location.pathname, navigate]);
+
+  useEffect(() => {
     const initializeWallet = async () => {
       const storedAccountId = localStorage.getItem("wallet_account_id");
 

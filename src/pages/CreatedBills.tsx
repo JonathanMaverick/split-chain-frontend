@@ -134,6 +134,12 @@ export default function CreatedBills() {
     console.log("Navigate to assign participants:", billId);
   };
 
+  const hasAnyPaidParticipant = (bill: Receipt): boolean => {
+    return bill.items.some((item) =>
+      item.participants.some((participant) => participant.isPaid?.trim() !== "")
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center">
@@ -262,42 +268,44 @@ export default function CreatedBills() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 ml-2">
-                                <button
-                                  onClick={(e) =>
-                                    handleEditBill(e, bill.billId!)
-                                  }
-                                  className="p-2 rounded-lg bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-purple-100 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/50"
-                                  title="Edit Bill"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
+                              {!hasAnyPaidParticipant(bill) && (
+                                <div className="flex items-center gap-2 ml-2">
+                                  <button
+                                    onClick={(e) =>
+                                      handleEditBill(e, bill.billId!)
+                                    }
+                                    className="p-2 rounded-lg bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 hover:text-purple-100 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/50"
+                                    title="Edit Bill"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
 
-                                <button
-                                  onClick={(e) =>
-                                    handleAssignParticipants(e, bill.billId!)
-                                  }
-                                  className="p-2 rounded-lg bg-gradient-to-r from-fuchsia-500/30 to-purple-500/30 text-white hover:from-fuchsia-500/40 hover:to-purple-500/40 transition-all duration-200 border border-fuchsia-400/40 hover:border-fuchsia-400/60 shadow-lg hover:shadow-xl"
-                                  title="Assign Participants"
-                                >
-                                  <Users className="w-4 h-4" />
-                                </button>
+                                  <button
+                                    onClick={(e) =>
+                                      handleAssignParticipants(e, bill.billId!)
+                                    }
+                                    className="p-2 rounded-lg bg-gradient-to-r from-fuchsia-500/30 to-purple-500/30 text-white hover:from-fuchsia-500/40 hover:to-purple-500/40 transition-all duration-200 border border-fuchsia-400/40 hover:border-fuchsia-400/60 shadow-lg hover:shadow-xl"
+                                    title="Assign Participants"
+                                  >
+                                    <Users className="w-4 h-4" />
+                                  </button>
 
-                                <button
-                                  onClick={(e) =>
-                                    handleDeleteBill(e, bill.billId!)
-                                  }
-                                  disabled={deletingBillId === bill.billId}
-                                  className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 transition-all duration-200 border border-red-500/20 hover:border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Delete Bill"
-                                >
-                                  {deletingBillId === bill.billId ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="w-4 h-4" />
-                                  )}
-                                </button>
-                              </div>
+                                  <button
+                                    onClick={(e) =>
+                                      handleDeleteBill(e, bill.billId!)
+                                    }
+                                    disabled={deletingBillId === bill.billId}
+                                    className="p-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 transition-all duration-200 border border-red-500/20 hover:border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Delete Bill"
+                                  >
+                                    {deletingBillId === bill.billId ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                </div>
+                              )}
 
                               <ChevronRight className="w-6 h-6 text-purple-300 group-hover:translate-x-1 transition-transform duration-300" />
                             </div>
