@@ -36,3 +36,9 @@ body {
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

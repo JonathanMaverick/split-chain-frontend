@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { CheckCircle, Clock, Users, FileText } from "lucide-react";
+import { CheckCircle, Clock, FileText } from "lucide-react";
 import { BillService } from "../services/billService";
 import { UserService } from "../services/userService";
 import { useWallet } from "../contexts/WalletContext";
@@ -63,6 +63,35 @@ const PaymentStatus = () => {
       totalSubtotal > 0 ? (subtotal / totalSubtotal) * bill.tax : 0;
 
     return subtotal + taxPortion;
+  };
+
+  const calculateFriendTotalWithBreakdown = (friendWalletAddress: string) => {
+    if (!bill) return { total: 0, serviceCharge: 0 };
+
+    const subtotal = bill.items.reduce((total, item) => {
+      if (!item.participants) return total;
+      const participantInItem = item.participants.find(
+        (p) => p.participantId === friendWalletAddress
+      );
+      if (participantInItem) {
+        const itemPrice = item.price;
+        const portionPerParticipant = itemPrice / item.participants.length;
+        return total + portionPerParticipant;
+      }
+      return total;
+    }, 0);
+
+    const totalSubtotal = bill.items.reduce((sum, item) => sum + item.price, 0);
+    const taxPortion =
+      totalSubtotal > 0 ? (subtotal / totalSubtotal) * bill.tax : 0;
+
+    const baseTotal = subtotal + taxPortion;
+
+    const isOwner = friendWalletAddress === bill.creatorId;
+    const serviceCharge = isOwner ? 0 : baseTotal * 0.01;
+    const total = baseTotal + serviceCharge;
+
+    return { total, serviceCharge };
   };
 
   const getPaymentStatus = (friendWalletAddress: string) => {
@@ -179,12 +208,14 @@ const PaymentStatus = () => {
 
   const sendTransaction = async (
     toAddress: string,
-    amount: number
+    amount: number,
+    serviceCharge: number
   ): Promise<string> => {
     console.log("Sending transaction to:", toAddress, "Amount:", amount);
     const transactionId = await WalletService.sendTransaction(
       toAddress,
-      amount
+      amount,
+      serviceCharge
     );
     if (!transactionId) {
       throw new Error("Transaction failed");
@@ -219,6 +250,14 @@ const PaymentStatus = () => {
 
   const subtotal = bill.items.reduce((sum, item) => sum + item.price, 0);
   const grandTotal = subtotal + bill.tax;
+  const { total, serviceCharge } = calculateFriendTotalWithBreakdown(
+    accountId!
+  );
+  const realTotal = calculateFriendTotal(accountId!);
+  const hbarAmount = Math.floor(total * HBAR_RATE * 100) / 100;
+
+  const realHbarAmount = Math.floor(realTotal * HBAR_RATE * 100) / 100;
+  const serviceChargeHbar = Math.floor(serviceCharge * HBAR_RATE * 100) / 100;
 
   return (
     <div className="max-w-2xl w-full mx-auto -mt-4">
@@ -247,78 +286,6 @@ const PaymentStatus = () => {
         </div>
 
         <div className="p-6">
-          <div className="space-y-4 mb-8">
-            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-purple-300" />
-              Payment Summary
-            </h4>
-
-            {getAllBillParticipants().map((participant) => {
-              const total = calculateFriendTotal(participant.participantId);
-              if (total === 0) return null;
-
-              const status = getPaymentStatus(participant.participantId);
-
-              return (
-                <div
-                  key={participant.participantId}
-                  className={`rounded-xl p-4 border ${
-                    participant.isCurrentUser
-                      ? "bg-fuchsia-600/20 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/20"
-                      : "bg-white/5 border-white/5"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-400
-                        }`}
-                      >
-                        <span className="text-white font-bold">
-                          {(participant.displayName || "A")
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <div
-                          className={`font-semibold text-lg ${
-                            participant.isCurrentUser
-                              ? "text-violet-200"
-                              : "text-white"
-                          }`}
-                        >
-                          {participant.displayName || "Anonymous"}
-                        </div>
-                        <div
-                          className={`text-sm ${
-                            participant.isCurrentUser
-                              ? "text-violet-300"
-                              : "text-purple-200"
-                          }`}
-                        >
-                          ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)}{" "}
-                          ℏ)
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
-                          status
-                        )}`}
-                      >
-                        {status === "paid" ? "Paid" : "Pending"}
-                      </span>
-                      {getStatusIcon(status)}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
           <div className="mb-6">
             <h4 className="text-lg font-semibold text-white mb-4">
               Bill Details
@@ -443,6 +410,135 @@ const PaymentStatus = () => {
             </div>
           </div>
 
+          <div className="space-y-4 mb-8">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              Payment Summary
+            </h4>
+
+            {getAllBillParticipants().map((participant) => {
+              const { total, serviceCharge } =
+                calculateFriendTotalWithBreakdown(participant.participantId);
+
+              if (total === 0) return null;
+
+              const status = getPaymentStatus(participant.participantId);
+
+              return (
+                <div
+                  key={participant.participantId}
+                  className={`rounded-xl p-4 border ${
+                    participant.isCurrentUser
+                      ? "bg-fuchsia-600/20 border border-fuchsia-500/50 shadow-lg shadow-fuchsia-500/20"
+                      : "bg-white/5 border-white/5"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-400
+                        }`}
+                      >
+                        <span className="text-white font-bold">
+                          {(participant.displayName || "A")
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div
+                          className={`font-semibold text-lg ${
+                            participant.isCurrentUser
+                              ? "text-violet-200"
+                              : "text-white"
+                          }`}
+                        >
+                          {participant.displayName || "Anonymous"}
+                        </div>
+                        <div
+                          className={`text-sm ${
+                            participant.isCurrentUser
+                              ? "text-violet-300"
+                              : "text-purple-200"
+                          }`}
+                        >
+                          ${total.toFixed(2)} ({(total * HBAR_RATE).toFixed(2)}{" "}
+                          ℏ)
+                          {serviceCharge > 0 ? (
+                            <div className="text-xs text-fuchsia-300 mt-0.5">
+                              Includes ${serviceCharge.toFixed(2)} service
+                              charge ({(serviceCharge * HBAR_RATE).toFixed(2)}{" "}
+                              ℏ)
+                            </div>
+                          ) : (
+                            <div className="text-xs text-fuchsia-300 mt-0.5">
+                              Bill Owner
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                          status
+                        )}`}
+                      >
+                        {status === "paid" ? "Paid" : "Pending"}
+                      </span>
+                      {getStatusIcon(status)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {getPaymentStatus(accountId!) === "pending" && (
+            <div className="flex gap-3 mt-6 items-center justify-between">
+              <button
+                onClick={async () => {
+                  const toAddress = bill.creatorId;
+
+                  try {
+                    const transactionId = await sendTransaction(
+                      toAddress,
+                      realHbarAmount,
+                      serviceChargeHbar
+                    );
+
+                    const updatedItems = bill.items.map((item) => {
+                      if (!item.participants) return item;
+
+                      const updatedParticipants = item.participants.map((p) => {
+                        if (p.participantId === accountId) {
+                          return { ...p, isPaid: transactionId };
+                        }
+                        return p;
+                      });
+
+                      return { ...item, participants: updatedParticipants };
+                    });
+
+                    setBill({ ...bill, items: updatedItems });
+
+                    await BillService.updateBill({
+                      ...bill,
+                      items: updatedItems,
+                    });
+                    window.location.reload();
+                  } catch (error) {
+                    alert("Payment failed. Please try again later.");
+                    console.error("Payment error:", error);
+                  }
+                }}
+                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+              >
+                Pay ${total.toFixed(2)} ({hbarAmount.toFixed(2)} ℏ)
+              </button>
+            </div>
+          )}
+
           {(() => {
             const transactionIds = new Set<string>();
 
@@ -517,53 +613,6 @@ const PaymentStatus = () => {
               </div>
             ) : null;
           })()}
-
-          {getPaymentStatus(accountId!) === "pending" && (
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={async () => {
-                  const usdAmount = calculateFriendTotal(accountId!);
-                  const hbarAmount =
-                    Math.floor(usdAmount * HBAR_RATE * 100) / 100;
-                  const toAddress = bill.creatorId;
-
-                  try {
-                    const transactionId = await sendTransaction(
-                      toAddress,
-                      hbarAmount
-                    );
-
-                    const updatedItems = bill.items.map((item) => {
-                      if (!item.participants) return item;
-
-                      const updatedParticipants = item.participants.map((p) => {
-                        if (p.participantId === accountId) {
-                          return { ...p, isPaid: transactionId };
-                        }
-                        return p;
-                      });
-
-                      return { ...item, participants: updatedParticipants };
-                    });
-
-                    setBill({ ...bill, items: updatedItems });
-
-                    await BillService.updateBill({
-                      ...bill,
-                      items: updatedItems,
-                    });
-                    window.location.reload();
-                  } catch (error) {
-                    alert("Payment failed. Please try again later.");
-                    console.error("Payment error:", error);
-                  }
-                }}
-                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
-              >
-                Pay Now
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

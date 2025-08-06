@@ -60,15 +60,23 @@ const BillDetails: React.FC<BillDetailsProps> = ({
   };
 
   const updateTempItem = (field: keyof ReceiptItem, value: string | number) => {
-    if (tempItem) {
-      setTempItem({
-        ...tempItem,
-        [field]:
-          field === "name"
-            ? String(value)
-            : Math.max(field === "quantity" ? 1 : 0, Number(value)),
-      });
+    if (!tempItem) return;
+
+    let newValue: string | number = value;
+
+    if (field === "quantity") {
+      newValue = Math.max(1, parseInt(String(value), 10));
+    } else if (field === "price") {
+      const parsed = parseFloat(String(value));
+      newValue = Math.max(0, Math.round(parsed * 100) / 100);
+    } else if (field === "name") {
+      newValue = String(value);
     }
+
+    setTempItem({
+      ...tempItem,
+      [field]: newValue,
+    });
   };
 
   const adjustTempQuantity = (delta: number) => {
@@ -271,12 +279,13 @@ const BillDetails: React.FC<BillDetailsProps> = ({
                           <div className="flex-1">
                             <input
                               min="0"
+                              type="number"
                               step="0.01"
                               value={tempItem.price}
                               onChange={(e) =>
                                 updateTempItem("price", e.target.value)
                               }
-                              className="w-full px-4 py-2.5 bg-white/10 text-white text-right rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-lg font-semibold"
+                              className="w-full px-4 py-2.5 bg-white/10 text-white text-right rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-lg font-semibold no-spinner"
                               placeholder="0.00"
                             />
                           </div>

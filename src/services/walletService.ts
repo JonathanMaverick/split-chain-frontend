@@ -21,6 +21,7 @@ const appMetadata = {
 };
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+const adminId = import.meta.env.VITE_ADMIN_ID!;
 
 let hashconnect: HashConnect;
 let state: HashConnectConnectionState = HashConnectConnectionState.Disconnected;
@@ -75,31 +76,37 @@ export const WalletService = {
     return state === HashConnectConnectionState.Paired && pairingData !== null;
   },
 
-  async sendTransaction(toAddress: string, amount: number): Promise<string | null> {
+  async sendTransaction(
+    toAddress: string,
+    amount: number,
+    serviceCharge: number
+  ): Promise<string | null> {
     const accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
       const accountId = AccountId.fromString(accountIdStr);
       const signer = hashconnect.getSigner(accountId);
-  
+
+      console.log("Sending transaction to:", toAddress, "Amount:", amount);
+      console.log("Service Charge:", serviceCharge, "Admin ID:", adminId);
+
       const transaction = await new TransferTransaction()
-        .addHbarTransfer(accountId, -amount)
+        .addHbarTransfer(accountId, -(amount + serviceCharge))
+        .addHbarTransfer(AccountId.fromString(adminId), serviceCharge)
         .addHbarTransfer(toAddress, amount)
         .freezeWithSigner(signer);
-  
+
       const response = await transaction.executeWithSigner(signer);
       const receipt = await response.getReceiptWithSigner(signer);
-  
+
       console.log("receipt: ", receipt);
       console.log("response: ", response);
       console.log("Transaction ID:", response.transactionId.toString());
-  
+
       return response.transactionId.toString();
     }
-  
-    return null;
-  }
-  ,
 
+    return null;
+  },
   async checkBalance() {
     const accountIdStr = this.getAccountId();
     if (accountIdStr !== null) {
