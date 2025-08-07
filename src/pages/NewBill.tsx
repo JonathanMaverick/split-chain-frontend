@@ -218,7 +218,7 @@ const NewBill = () => {
                         <p className="text-purple-200">{uploadedFile.name}</p>
                         <div className="flex flex-row justify-center gap-4 mt-4">
                           <button
-                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-lg font-semibold text-white transition-all duration-300 hover:brightness-110 cursor-pointer"
+                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-lg font-semibold text-white transition-all duration-300 hover:brightness-110 cursor-pointer text-xs sm:text-base"
                             onClick={handleProcessSplit}
                             disabled={processing}
                           >
@@ -226,7 +226,7 @@ const NewBill = () => {
                           </button>
                           <button
                             onClick={handleRemoveFile}
-                            className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200 cursor-pointer"
+                            className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200 cursor-pointer text-xs sm:text-base"
                             disabled={processing}
                           >
                             Change Photo

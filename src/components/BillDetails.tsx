@@ -160,19 +160,19 @@ const BillDetails: React.FC<BillDetailsProps> = ({
   const grandTotal = subtotal + receipt.tax;
 
   return (
-    <div className="max-w-2xl w-full mx-auto -mt-4">
+    <div className="max-w-2xl w-full mx-auto px-4 sm:px-0 -mt-4">
       <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-6 py-4 border-b border-white/10">
+        <div className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 px-4 sm:px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg">
-              <FileText className="w-6 h-6 text-purple-300" />
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
             </div>
             {editingStoreName ? (
               <div className="flex items-center gap-2 flex-1">
                 <input
                   value={tempStoreName}
                   onChange={(e) => setTempStoreName(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-white/10 text-white text-xl font-bold rounded-lg border border-purple-400 focus:border-purple-300 focus:bg-white/15 outline-none"
+                  className="flex-1 px-3 sm:px-4 py-2 bg-white/10 text-white text-lg sm:text-xl font-bold rounded-lg border border-purple-400 focus:border-purple-300 focus:bg-white/15 outline-none"
                   placeholder="Store name"
                   autoFocus
                   onKeyPress={(e) => e.key === "Enter" && saveStoreNameEdit()}
@@ -193,14 +193,15 @@ const BillDetails: React.FC<BillDetailsProps> = ({
             ) : (
               <button
                 onClick={startEditingStoreName}
-                className="text-xl font-bold text-white hover:text-purple-200 transition-colors cursor-pointer group flex items-center gap-2"
+                className="text-lg sm:text-xl font-bold text-white hover:text-purple-200 transition-colors cursor-pointer group flex items-center gap-2 flex-1 text-left"
               >
-                {receipt.storeName}
-                <Edit3 className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <span className="truncate">{receipt.storeName}</span>
+                <Edit3 className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </button>
             )}
           </div>
-          <div className="ml-[3.35rem] mt-2">
+
+          <div className="ml-0 sm:ml-[3.35rem] mt-3 sm:mt-2">
             {editingBillDate ? (
               <div className="flex items-center gap-2">
                 <input
@@ -239,56 +240,53 @@ const BillDetails: React.FC<BillDetailsProps> = ({
           </div>
         </div>
 
-        <div className="p-6">
-          <div className="space-y-4">
+        <div className="p-4 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {receipt.items.map((item, idx) => (
               <div key={idx} className="group relative">
-                <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-xl p-4 border border-white/5 hover:border-white/20">
+                <div className="bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-xl p-3 sm:p-4 border border-white/5 hover:border-white/20">
                   {editingItem === idx && tempItem ? (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <input
-                          value={tempItem.name}
-                          onChange={(e) =>
-                            updateTempItem("name", e.target.value)
-                          }
-                          className="w-full px-4 py-2.5 bg-white/10 text-white rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-lg font-medium placeholder-white/50"
-                          placeholder="Item name"
-                          autoFocus
-                        />
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center bg-white/10 border border-white/20 rounded-lg overflow-hidden">
-                            <button
-                              onClick={() => adjustTempQuantity(-1)}
-                              disabled={tempItem.quantity <= 1}
-                              className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Minus className="w-5 h-5 text-purple-300" />
-                            </button>
-                            <div className="px-4 py-3 text-white font-semibold min-w-[3rem] text-center">
-                              {tempItem.quantity}
-                            </div>
-                            <button
-                              onClick={() => adjustTempQuantity(1)}
-                              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                            >
-                              <Plus className="w-5 h-5 text-purple-300" />
-                            </button>
-                          </div>
+                      <input
+                        value={tempItem.name}
+                        onChange={(e) => updateTempItem("name", e.target.value)}
+                        className="w-full px-3 sm:px-4 py-2.5 bg-white/10 text-white rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-base sm:text-lg font-medium placeholder-white/50"
+                        placeholder="Item name"
+                        autoFocus
+                      />
 
-                          <div className="flex-1">
-                            <input
-                              min="0"
-                              type="number"
-                              step="0.01"
-                              value={tempItem.price}
-                              onChange={(e) =>
-                                updateTempItem("price", e.target.value)
-                              }
-                              className="w-full px-4 py-2.5 bg-white/10 text-white text-right rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-lg font-semibold no-spinner"
-                              placeholder="0.00"
-                            />
+                      <div className="flex gap-3 sm:gap-4">
+                        <div className="flex items-center bg-white/10 border border-white/20 rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => adjustTempQuantity(-1)}
+                            disabled={tempItem.quantity <= 1}
+                            className="p-2 hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
+                          </button>
+                          <div className="px-4 py-2 sm:py-3 text-white font-semibold min-w-[3rem] text-center">
+                            {tempItem.quantity}
                           </div>
+                          <button
+                            onClick={() => adjustTempQuantity(1)}
+                            className="p-2 hover:bg-white/10 transition-colors"
+                          >
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
+                          </button>
+                        </div>
+
+                        <div className="flex-1">
+                          <input
+                            min="0"
+                            type="number"
+                            step="0.01"
+                            value={tempItem.price}
+                            onChange={(e) =>
+                              updateTempItem("price", e.target.value)
+                            }
+                            className="w-full px-3 sm:px-4 py-2.5 bg-white/10 text-white text-right rounded-lg border border-white/20 focus:border-purple-400 focus:bg-white/15 outline-none text-base sm:text-lg font-semibold"
+                            placeholder="0.00"
+                          />
                         </div>
                       </div>
 
@@ -298,55 +296,52 @@ const BillDetails: React.FC<BillDetailsProps> = ({
                           className="flex-1 px-4 py-3 flex items-center justify-center gap-2 font-medium shadow-lg hover:shadow-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-lg text-white transition-all duration-300 hover:brightness-110 cursor-pointer"
                         >
                           <Check className="w-4 h-4" />
-                          Save
+                          <span className="hidden sm:inline">Save</span>
                         </button>
                         <button
                           onClick={cancelItemEdit}
                           className="flex-1 px-4 py-3 rounded-lg flex items-center justify-center gap-2 font-medium shadow-lg hover:shadow-xl bg-white/10 hover:bg-white/20 text-white transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer"
                         >
                           <X className="w-4 h-4" />
-                          Cancel
+                          <span className="hidden sm:inline">Cancel</span>
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-4">
-                      <div className="bg-gradient-to-r from-purple-500/20 to-fuchsia-500/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-purple-400/30">
-                        <span className="text-white font-bold text-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                      <div className="bg-gradient-to-r from-purple-500/20 to-fuchsia-500/20 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 border border-purple-400/30 self-start">
+                        <span className="text-white font-bold text-base sm:text-lg">
                           {item.quantity}×
                         </span>
                       </div>
 
-                      <div className="flex-1">
-                        <div className="text-white font-semibold text-lg">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-semibold text-base sm:text-lg break-words">
                           {item.name}
                         </div>
-                        {/* <div className="text-purple-200 text-sm">
-                          ${item.price.toFixed(2)} each
-                        </div> */}
                       </div>
 
-                      <div className="text-right">
-                        <div className="text-white font-bold text-xl">
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                        <div className="text-white font-bold text-lg sm:text-xl">
                           ${item.price.toFixed(2)}
                         </div>
-                      </div>
 
-                      <div className="flex gap-2 ml-3">
-                        <button
-                          onClick={() => startEditingItem(idx)}
-                          className="p-2.5 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 hover:text-purple-200 transition-all duration-200 border border-white/10 hover:border-white/30 cursor-pointer"
-                          title="Edit item"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => removeItem(idx)}
-                          className="p-2.5 rounded-lg bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 border border-white/10 hover:border-red-400/30 cursor-pointer"
-                          title="Delete item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => startEditingItem(idx)}
+                            className="p-2 sm:p-2.5 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 hover:text-purple-200 transition-all duration-200 border border-white/10 hover:border-white/30 cursor-pointer"
+                            title="Edit item"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => removeItem(idx)}
+                            className="p-2 sm:p-2.5 rounded-lg bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 border border-white/10 hover:border-red-400/30 cursor-pointer"
+                            title="Delete item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -355,19 +350,23 @@ const BillDetails: React.FC<BillDetailsProps> = ({
             ))}
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4 mt-6"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-6"></div>
 
           <div>
-            <div className="space-y-2">
+            <div className="space-y-3 sm:space-y-2">
               <div className="flex justify-between items-center text-white">
-                <span className="font-semibold text-xl">Subtotal</span>
-                <span className="font-semibold text-xl">
+                <span className="font-semibold text-lg sm:text-xl">
+                  Subtotal
+                </span>
+                <span className="font-semibold text-lg sm:text-xl">
                   ${subtotal.toFixed(2)}
                 </span>
               </div>
 
               <div className="flex justify-between items-center text-purple-200">
-                <span className="font-semibold text-xl">Tax & Fees</span>
+                <span className="font-semibold text-lg sm:text-xl">
+                  Tax & Fees
+                </span>
                 <div className="flex items-center gap-2">
                   {editingTax ? (
                     <div className="flex items-center gap-2">
@@ -376,7 +375,7 @@ const BillDetails: React.FC<BillDetailsProps> = ({
                         step="0.01"
                         value={tempTax}
                         onChange={(e) => setTempTax(e.target.value)}
-                        className="w-24 px-3 py-2 bg-white/10 text-white text-right rounded-lg border border-purple-400 focus:border-purple-300 focus:bg-white/15 outline-none font-medium"
+                        className="w-20 sm:w-24 px-3 py-2 bg-white/10 text-white text-right rounded-lg border border-purple-400 focus:border-purple-300 focus:bg-white/15 outline-none font-medium"
                         autoFocus
                         onKeyPress={(e) => e.key === "Enter" && saveTaxEdit()}
                       />
@@ -398,7 +397,7 @@ const BillDetails: React.FC<BillDetailsProps> = ({
                       onClick={() => startEditingTax(receipt.tax)}
                       className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-white/10 transition-colors group/tax cursor-pointer"
                     >
-                      <span className="text-purple-200 font-semibold text-xl">
+                      <span className="text-purple-200 font-semibold text-lg sm:text-xl">
                         ${receipt.tax.toFixed(2)}
                       </span>
                       <Edit3 className="w-4 h-4 text-white opacity-60 group-hover/tax:opacity-100 transition-opacity" />
@@ -410,27 +409,23 @@ const BillDetails: React.FC<BillDetailsProps> = ({
               <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4"></div>
 
               <div className="flex justify-between items-center">
-                <span className="font-semibold text-xl text-white">Total</span>
-                <span className="font-semibold text-xl bg-gradient-to-r text-white">
+                <span className="font-semibold text-lg sm:text-xl text-white">
+                  Total
+                </span>
+                <span className="font-semibold text-lg sm:text-xl bg-gradient-to-r text-white">
                   ${grandTotal.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3">
+          <div className="mt-6 sm:mt-8">
             <button
               className="w-full px-6 py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
               onClick={handleSave}
             >
               Save
             </button>
-            {/* <button
-              className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-medium text-white transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer"
-              onClick={handleSaveForLater}
-            >
-              Save for Later
-            </button> */}
           </div>
         </div>
       </div>

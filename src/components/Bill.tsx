@@ -526,7 +526,7 @@ const Bill: React.FC<BillProps> = ({ receipt, onSave }) => {
                 </div>
 
                 <div className="h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {filteredFriends.length > 0 ? (
                       filteredFriends.map((friend, index) => {
                         const isAssigned =

@@ -9,6 +9,10 @@ interface Inbox {
   createdAt: string;
 }
 
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}${
+  import.meta.env.VITE_API_VERSION
+}`;
+
 export default function InboxBell() {
   const [open, setOpen] = useState<boolean>(false);
   const { inboxes }: { inboxes: Inbox[] } = useSocket();
@@ -20,7 +24,7 @@ export default function InboxBell() {
     link: string
   ): Promise<void> => {
     try {
-      await fetch(`http://localhost:8080/api/v1/inboxes/${inboxId}/read`, {
+      await fetch(`${BASE_URL}/inboxes/${inboxId}/read`, {
         method: "PATCH",
       });
     } catch (error) {
@@ -62,7 +66,7 @@ export default function InboxBell() {
       </div>
 
       {open && (
-        <div className="absolute right-0 top-8 w-96 bg-gray-900 rounded-lg border border-gray-600 shadow-xl z-50 opacity-0 translate-y-2 animate-dropdown">
+        <div className="fixed sm:absolute right-4 sm:right-0 top-14 sm:top-8 w-80 sm:w-96 bg-gray-900 rounded-lg border border-gray-600 shadow-xl z-50 opacity-0 translate-y-2 animate-dropdown">
           <div className="flex items-center justify-between p-5 border-b border-gray-700">
             <h4 className="text-base font-medium text-gray-200">
               Notifications

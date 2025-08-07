@@ -95,16 +95,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             try {
               const balanceRes = await WalletService.checkBalance();
               setBalance(balanceRes);
-              console.log("Balance d:", balanceRes);
             } catch (error) {
               console.error("Error fetching balancesss:", error);
             }
 
             try {
-              const response = await UserService.registerUser({
+              await UserService.registerUser({
                 wallet_address: id,
               });
-              console.log("User registered:", response.message);
             } catch (err) {
               console.log("User register failed:", err);
             }

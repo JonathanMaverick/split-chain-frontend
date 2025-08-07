@@ -14,7 +14,7 @@ export default function Template({ children }: TemplateProps) {
     return (
       <div className="min-h-screen bg-transparent text-white">
         <Navbar />
-        <main className="px-6 py-8">
+        <main className="px-2 md:px-6 py-4 md:py-8">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

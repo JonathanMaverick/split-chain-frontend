@@ -28,7 +28,9 @@ export const FriendService = {
 
   async getFriends(userWalletAddress: string): Promise<Friend[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/friends/${userWalletAddress}`);
+      const response = await axios.get(
+        `${BASE_URL}/friends/${userWalletAddress}`
+      );
       return response.data.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -43,7 +45,9 @@ export const FriendService = {
 
   async getPendingFriends(userWalletAddress: string): Promise<PendingFriend[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/friends/get-pending-request/${userWalletAddress}`);
+      const response = await axios.get(
+        `${BASE_URL}/friends/get-pending-request/${userWalletAddress}`
+      );
       return response.data.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -56,10 +60,13 @@ export const FriendService = {
     }
   },
 
-  async getPendingRequests(userWalletAddress: string): Promise<PendingFriend[]> {
+  async getPendingRequests(
+    userWalletAddress: string
+  ): Promise<PendingFriend[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/friends/get-pending-request-by-friend/${userWalletAddress}`);
-      console.log("TES: ", response.data.data);
+      const response = await axios.get(
+        `${BASE_URL}/friends/get-pending-request-by-friend/${userWalletAddress}`
+      );
       return response.data.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -72,7 +79,11 @@ export const FriendService = {
     }
   },
 
-  async addNickname(userWalletAddress: string, friendWalletAddress: string, nickname: string) {
+  async addNickname(
+    userWalletAddress: string,
+    friendWalletAddress: string,
+    nickname: string
+  ) {
     try {
       const response = await axios.post(`${BASE_URL}/friends/alias`, {
         friend_wallet_address: friendWalletAddress,
@@ -123,6 +134,5 @@ export const FriendService = {
         throw new Error("Unexpected error");
       }
     }
-  }
-
+  },
 };

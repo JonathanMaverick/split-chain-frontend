@@ -131,13 +131,13 @@ const ParticipatedBills = () => {
   const totalBills = bills.length;
 
   return (
-    <div>
+    <div className="px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
             Participated Bills
           </h1>
-          <p className="text-purple-200">
+          <p className="text-purple-200 text-sm sm:text-base">
             {totalBills === 0
               ? "No participated bills found"
               : `${totalBills} bill${
@@ -147,30 +147,30 @@ const ParticipatedBills = () => {
         </div>
 
         {totalBills === 0 ? (
-          <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-12 shadow-2xl text-center">
-            <div className="p-4 bg-white/10 rounded-full inline-block mb-6">
-              <FileText className="w-12 h-12 text-purple-300" />
+          <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-8 sm:p-12 shadow-2xl text-center">
+            <div className="p-3 sm:p-4 bg-white/10 rounded-full inline-block mb-4 sm:mb-6">
+              <FileText className="w-8 h-8 sm:w-12 sm:h-12 text-purple-300" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
               No Participated Bills Yet
             </h3>
-            <p className="text-purple-200 text-lg">
+            <p className="text-purple-200 text-base sm:text-lg">
               Bills you participate in will appear here
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {Object.entries(groupedBills).map(([dateKey, billsForDate]) => (
-              <div key={dateKey} className="space-y-4">
-                <div className="flex items-center gap-3 mb-4">
+              <div key={dateKey} className="space-y-3 sm:space-y-4">
+                <div className="flex items-center gap-3 mb-3 sm:mb-4">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent"></div>
-                  <h2 className="text-xl font-bold text-purple-200 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 rounded-lg border border-purple-400/20">
+                  <h2 className="text-lg sm:text-xl font-bold text-purple-200 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 rounded-lg border border-purple-400/20">
                     {dateKey}
                   </h2>
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent"></div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {billsForDate.map((bill, index) => {
                     const totalAmount = calculateTotalAmount(bill);
 
@@ -178,20 +178,65 @@ const ParticipatedBills = () => {
                       <div key={index} className="group">
                         <div
                           onClick={() => handleBillClick(bill.billId!)}
-                          className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 border backdrop-blur-sm border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-purple-400/30 cursor-pointer hover:brightness-110"
+                          className="bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 border backdrop-blur-sm border-white/20 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-purple-400/30 cursor-pointer hover:brightness-110"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="p-3 bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 rounded-xl">
+                          {/* Mobile Layout */}
+                          <div className="block sm:hidden">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 rounded-xl flex-shrink-0">
+                                <FileText className="w-5 h-5 text-purple-300" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-lg font-bold text-white mb-1 truncate">
+                                  {bill.storeName}
+                                </h3>
+                                <div className="flex items-center gap-3 text-xs text-purple-200">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3 flex-shrink-0" />
+                                    <span>
+                                      {new Date(
+                                        bill.billDate
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+                                  {/* <div className="flex items-center gap-1">
+                                    <Package className="w-3 h-3 flex-shrink-0" />
+                                    <span>{bill.items.length} items</span>
+                                  </div> */}
+                                </div>
+                              </div>
+                              <div className="text-right flex-shrink-0 flex items-center gap-1">
+                                <div>
+                                  <div className="text-xl font-bold text-white flex items-center justify-end gap-0">
+                                    <DollarSign className="w-4 h-4 text-purple-300" />
+                                    {formatCurrency(totalAmount)}
+                                  </div>
+                                  <div className="text-purple-200 text-xs">
+                                    Total
+                                  </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-purple-300 group-hover:translate-x-1 transition-transform duration-300 ml-1" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Desktop Layout */}
+                          <div className="hidden sm:flex sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              <div className="p-3 bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 rounded-xl flex-shrink-0">
                                 <FileText className="w-6 h-6 text-purple-300" />
                               </div>
-                              <div>
-                                <h3 className="text-xl font-bold text-white mb-1">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-xl font-bold text-white mb-1 truncate">
                                   {bill.storeName}
                                 </h3>
                                 <div className="flex items-center gap-4 text-sm text-purple-200">
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
+                                    <Calendar className="w-4 h-4 flex-shrink-0" />
                                     <span>
                                       {new Date(
                                         bill.billDate
@@ -203,7 +248,7 @@ const ParticipatedBills = () => {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Package className="w-4 h-4" />
+                                    <Package className="w-4 h-4 flex-shrink-0" />
                                     <span>{bill.items.length} items</span>
                                   </div>
                                 </div>

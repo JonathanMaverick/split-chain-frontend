@@ -28,6 +28,12 @@ const SocketContext = createContext<SocketContextType>({
   fetchInboxes: async () => {},
 });
 
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}${
+  import.meta.env.VITE_API_VERSION
+}`;
+
+const WS_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace("http", "ws");
+
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [inboxes, setInboxes] = useState<Inbox[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
@@ -37,13 +43,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     if (!userId) return;
 
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/inboxes?userId=${userId}`
-      );
+      const res = await fetch(`${BASE_URL}/inboxes?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch inboxes");
       const json = await res.json();
       setInboxes(json || []);
-      console.log("Inboxes fetched: ", json);
     } catch (err) {
       console.error("Error fetching inboxes:", err);
     }
@@ -58,12 +61,12 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     fetchInboxes();
 
-    const ws = new WebSocket(`ws://localhost:8080/api/v1/ws/${userId}`);
+    const ws = new WebSocket(
+      `${WS_BASE_URL}${import.meta.env.VITE_API_VERSION}/ws/${userId}`
+    );
     socketRef.current = ws;
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
+    ws.onopen = () => {};
 
     ws.onmessage = (event) => {
       try {
@@ -82,9 +85,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket closed");
-    };
+    ws.onclose = () => {};
 
     ws.onerror = (err) => {
       console.error("WebSocket error:", err);

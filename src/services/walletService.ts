@@ -47,19 +47,16 @@ export const WalletService = {
 
   setUpHashConnectEvents() {
     hashconnect.pairingEvent.on((newPairing) => {
-      console.log("Paired:", newPairing);
       pairingData = newPairing;
       localStorage.setItem("wallet_account_id", newPairing.accountIds[0]);
     });
 
     hashconnect.disconnectionEvent.on(() => {
-      console.log("Disconnected");
       state = HashConnectConnectionState.Disconnected;
       pairingData = null;
     });
 
     hashconnect.connectionStatusChangeEvent.on((connectionStatus) => {
-      console.log("Connection state:", connectionStatus);
       state = connectionStatus;
     });
   },
@@ -86,9 +83,6 @@ export const WalletService = {
       const accountId = AccountId.fromString(accountIdStr);
       const signer = hashconnect.getSigner(accountId);
 
-      console.log("Sending transaction to:", toAddress, "Amount:", amount);
-      console.log("Service Charge:", serviceCharge, "Admin ID:", adminId);
-
       const transaction = await new TransferTransaction()
         .addHbarTransfer(accountId, -(amount + serviceCharge))
         .addHbarTransfer(AccountId.fromString(adminId), serviceCharge)
@@ -96,11 +90,7 @@ export const WalletService = {
         .freezeWithSigner(signer);
 
       const response = await transaction.executeWithSigner(signer);
-      const receipt = await response.getReceiptWithSigner(signer);
-
-      console.log("receipt: ", receipt);
-      console.log("response: ", response);
-      console.log("Transaction ID:", response.transactionId.toString());
+      await response.getReceiptWithSigner(signer);
 
       return response.transactionId.toString();
     }
